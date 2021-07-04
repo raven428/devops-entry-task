@@ -1,0 +1,20 @@
+---
+- name: set selinux to permissive
+  selinux:
+    state: permissive
+    policy: targeted
+
+- name: force relabel after reboot
+  file:
+    path: '/.autorelabel'
+    state: touch
+
+- name: perform reboot to relabel
+  reboot:
+    msg: 'reboot host to selinux relabel'
+    # longer timeout, bc relabeling could take a while
+    reboot_timeout: 900
+
+- name: debug
+  debug:
+    msg: 'return from reboot to relabel'

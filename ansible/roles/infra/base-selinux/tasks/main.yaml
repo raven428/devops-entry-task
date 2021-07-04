@@ -1,0 +1,58 @@
+---
+- name: update facts with installed packages
+  setup:
+  when:
+    - (ansible_selinux.status != 'enabled') or (ansible_selinux.status != 'disabled')
+
+# Before installing selinux packages `ansible_selinux.status` have `disabled` state. After installing it became `enabled` with `ansible_selinux.config_mode = permissive`, but w/o relabel filesystem. Thus, after installing packages it's not possible to know have filesystem relabeled or not. Hence, actual `status` need to be saved before installing selinux packages.
+- set_fact:
+    selinux_initial_mode: "disabled"
+    selinux_initial_status: "{{ ansible_selinux.status }}"
+- set_fact:
+    selinux_initial_mode: "{{ ansible_selinux.mode }}"
+  when: selinux_initial_status == 'enabled'
+
+- name: install selinux packages
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "selinux-policy-targeted"
+
+- name: force to refresh facts
+  meta: flush_handlers
+
+- name: print debug
+  debug:
+    msg:
+      - "ansible_selinux is [{{ ansible_selinux }}]"
+      - "selinux_initial_mode is [{{ selinux_initial_mode }}]"
+      - "selinux_initial_status is [{{ selinux_initial_status }}]"
+      - "infra_base_selinux_state is [{{ infra_base_selinux_state }}]"
+
+- name: set config_mode to real mode after first install for avoiding extra reboots
+  selinux:
+    state: "{{ ansible_selinux.mode }}"
+    policy: "{{ ansible_selinux.type }}"
+  when: ansible_selinux.status == 'enabled'
+
+# force relabel with reboot on:
+#   * first install to enforcing
+#   * change status to enabled with enforcing mode
+#   * change mode from permissive to enforcing while enabled status
+# skip relabel with reboot on:
+#   * first install to disabled
+#   * first install to permissive
+#   * change mode from enforcing to disabled
+#   * change mode from permissive to disabled
+#   * change mode from enforcing to permissive while enabled status
+# https://access.redhat.com/solutions/24845
+- name: selinux relabel filesystem
+  include_tasks: relabel.yaml
+  when: infra_base_selinux_state == 'enforcing' and (selinux_initial_status != 'enabled' or selinux_initial_mode != 'enforcing')
+
+- name: set selinux mode to [{{ infra_base_selinux_state }}]
+  notify: perform reboot
+  selinux:
+    policy: targeted
+    state: "{{ infra_base_selinux_state }}"
