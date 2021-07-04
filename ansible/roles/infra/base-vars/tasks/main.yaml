@@ -1,0 +1,148 @@
+---
+# usage:
+# - name: load role variables depend OS
+#   import_role:
+#     name: infra/base-vars
+#   tags: [<role_name>-vars-loader]
+
+# "defaults/os_family/redhat.yaml" for CentOS
+# "defaults/os_family/redhat.yaml" for RedHat
+# "defaults/os_family/debian.yaml" for Debian
+# "defaults/os_family/debian.yaml" for Ubuntu
+- name: "declare variables ansible_os_family"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_family/{{
+        ansible_os_family |
+        lower
+      }}.yaml
+  register: "infra_os_family_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_os_family"
+  include_vars: "{{infra_os_family_vars.stat.path}}"
+  when: "infra_os_family_vars.stat.exists"
+
+# "defaults/os_dist/centos.yaml" for CentOS
+# "defaults/os_dist/redhat.yaml" for RedHat
+# "defaults/os_dist/debian.yaml" for Debian
+# "defaults/os_dist/ubuntu.yaml" for Ubuntu
+- name: "declare variables ansible_distribution"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_dist/{{
+        ansible_distribution |
+        lower
+      }}.yaml
+  register: "infra_os_dist_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_distribution"
+  include_vars: "{{infra_os_dist_vars.stat.path}}"
+  when: "infra_os_dist_vars.stat.exists"
+
+# "defaults/os_family/redhat-8.yaml" for CentOS 8.3
+# "defaults/os_family/redhat-8.yaml" for RedHat 8.3
+# "defaults/os_family/debian-9.yaml" for Debian 9.2
+# "defaults/os_family/debian-10.yaml" for Ubuntu 10.2
+- name: "declare variables ansible_os_family-dist_major_version"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_family/{{
+        ansible_os_family |
+        lower
+      }}-{{
+        ansible_distribution_major_version
+      }}.yaml
+  register: "infra_os_family_mver_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_os_family dist_major_version"
+  include_vars: "{{infra_os_family_mver_vars.stat.path}}"
+  when: "infra_os_family_mver_vars.stat.exists"
+
+# "defaults/os_dist/centos-8.yaml" for CentOS 8.3
+# "defaults/os_dist/redhat-8.yaml" for RedHat 8.3
+# "defaults/os_dist/debian-9.yaml" for Debian 9.2
+# "defaults/os_dist/ubuntu-10.yaml" for Ubuntu 10.2
+- name: "declare variables ansible_distribution-dist_major_version"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_dist/{{
+        ansible_distribution |
+        lower
+      }}-{{
+        ansible_distribution_major_version
+      }}.yaml
+  register: "infra_os_dist_mver_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_distribution dist_major_version"
+  include_vars: "{{infra_os_dist_mver_vars.stat.path}}"
+  when: "infra_os_dist_mver_vars.stat.exists"
+
+# "defaults/os_family/redhat-8_3.yaml" for CentOS 8.3
+# "defaults/os_family/redhat-8_3.yaml" for RedHat 8.3
+# "defaults/os_family/debian-9_2.yaml" for Debian 9.2
+# "defaults/os_family/debian-10_2.yaml" for Ubuntu 10.2
+- name: "declare variables ansible_os_family dist_version"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_family/{{
+        ansible_os_family |
+        lower
+      }}-{{
+        ansible_distribution_version |
+        replace(".", "_")
+      }}.yaml
+  register: "infra_os_family_ver_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_os_family dist_version"
+  include_vars: "{{infra_os_family_ver_vars.stat.path}}"
+  when: "infra_os_family_ver_vars.stat.exists"
+
+# "defaults/os_dist/centos-8_3.yaml" for CentOS 8.3
+# "defaults/os_dist/redhat-8_3.yaml" for RedHat 8.3
+# "defaults/os_dist/debian-9_2.yaml" for Debian 9.2
+# "defaults/os_dist/ubuntu-10_2.yaml" for Ubuntu 10.2
+- name: "declare variables ansible_distribution dist_version"
+  become: False
+  stat:
+    path: >-
+      {{
+        ansible_parent_role_paths |
+        first
+      }}/defaults/os_dist/{{
+        ansible_distribution |
+        lower
+      }}-{{
+        ansible_distribution_version |
+        replace(".", "_")
+      }}.yaml
+  register: "infra_os_dist_ver_vars"
+  delegate_to: "127.0.0.1"
+
+- name: "include variables ansible_distribution dist_version"
+  include_vars: "{{infra_os_dist_ver_vars.stat.path}}"
+  when: "infra_os_dist_ver_vars.stat.exists"
