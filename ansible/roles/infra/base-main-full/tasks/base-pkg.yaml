@@ -1,0 +1,31 @@
+---
+- name: install useful packages
+  package:
+    name: >
+      {{
+        infra_base_packages_default |
+        union(
+          infra_main_union_suffixes |
+          union_by_suffixes(
+            prefix = 'infra_base_packages',
+            hostvars = hostvars[inventory_hostname],
+          )
+        )
+      }}
+  tags: [setup, setup-pkg]
+
+- name: remove forbidden packages
+  package:
+    name: >
+      {{
+        infra_base_deny_packages_default |
+        union(
+          infra_main_union_suffixes |
+          union_by_suffixes(
+            prefix = 'infra_base_deny_packages',
+            hostvars = hostvars[inventory_hostname],
+          )
+        )
+      }}
+    state: absent
+  tags: [setup, setup-pkg]

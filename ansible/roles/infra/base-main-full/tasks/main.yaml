@@ -1,0 +1,16 @@
+---
+- name: verify OS requirements
+  assert:
+    that:
+      - ansible_distribution_file_variety == 'RedHat'
+      - ansible_distribution_major_version|int >= 7
+    msg: 'This role is for RHEL version 7 or higher.'
+  tags: [always]
+
+- name: install base packages
+  import_tasks: base-pkg.yaml
+  tags: [setup, pkg]
+
+- name: upload base configs
+  import_tasks: base-etc.yaml
+  tags: [setup, etc]

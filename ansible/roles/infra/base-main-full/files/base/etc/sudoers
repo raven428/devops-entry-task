@@ -1,0 +1,9 @@
+#
+# default sudoers
+#
+# NB managed by ansible
+#
+Defaults !env_reset
+%root ALL=(ALL) NOPASSWD: ALL
+%wheel ALL=(ALL) NOPASSWD: ALL
+#includedir /etc/sudoers.d

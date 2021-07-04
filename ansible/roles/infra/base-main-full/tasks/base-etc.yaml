@@ -1,0 +1,355 @@
+---
+- name: make selinux permissive for some trusty
+  selinux_permissive:
+    name: "{{item}}"
+    permissive: true
+  loop:
+    - rsync_t
+    - systemd_resolved_t
+  tags: [setup, etc, etc-resolved]
+
+- name: exact set timezone
+  file:
+    src: /usr/share/zoneinfo/UTC
+    dest: /etc/timezone
+    force: yes
+    state: link
+  tags: [setup, etc, etc-system]
+
+- name: ansible set timezone
+  timezone:
+    name: UTC
+  tags: [setup, etc, etc-system]
+
+- name: (legacy) add sysconfig/clock
+  copy:
+    dest: /etc/sysconfig/clock
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      ZONE=UTC
+      UTC=true
+      ARC=false
+  tags: [setup, etc, etc-system]
+
+- name: remove dnf makecache timer reconfiguration
+  notify: systemd daemon-reload
+  file:
+    path: /etc/systemd/system/dnf-makecache.timer
+    state: absent
+  tags: [setup, etc]
+
+- name: upload sysctl settings
+  notify: apply sysctl
+  copy:
+    src: base/etc/sysctl.d/55-tuning.conf
+    dest: /etc/sysctl.d/55-tuning.conf
+  tags: [setup, etc, etc-system]
+
+- name: enable and start rsyslogd
+  systemd:
+    name: rsyslog
+    masked: no
+    enabled: yes
+    state: started
+  tags: [setup, etc, etc-log]
+
+- name: disable rsyslog *.emerg to all users
+  notify: restart rsyslog
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: '^(\*\.emerg\s+.+\*)$'
+    line: '#\1'
+    backrefs: yes
+  tags: [setup, etc, etc-log]
+
+- name: add all.log to rsyslogd
+  notify: restart rsyslog
+  copy:
+    src: base/etc/rsyslog.d/all-log.conf
+    dest: /etc/rsyslog.d/all-log.conf
+  tags: [setup, etc, etc-log]
+
+- name: add all.log to logrotate
+  copy:
+    src: base/etc/logrotate.d/all-log.conf
+    dest: /etc/logrotate.d/all-log.conf
+  tags: [setup, etc, etc-log]
+
+- name: configure journald
+  ini_file:
+    dest: /etc/systemd/journald.conf
+    section: Journal
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    no_extra_spaces: yes
+  loop:
+    - { option: "Storage", value: "persistent" }
+    - { option: "Compress", value: "yes" }
+  notify: restart journald
+  tags: [setup, etc, etc-log]
+
+- name: improve ssh server security
+  action: augeas commands='set /files/etc/ssh/sshd_config/PermitRootLogin without-password'
+  notify: restart sshd
+  tags: [setup, etc, etc-access]
+
+- name: replace sudoers
+  copy:
+    src: base/etc/sudoers
+    dest: /etc/sudoers
+    mode: 0440
+    owner: root
+    group: root
+  tags: [setup, etc, etc-access]
+
+- name: stop and disable chronyd
+  systemd:
+    name: chronyd
+    enabled: no
+    state: stopped
+  ignore_errors: true
+  tags: [setup, etc, etc-system]
+
+- name: configure timesyncd
+  ini_file:
+    dest: /etc/systemd/timesyncd.conf
+    section: Time
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    no_extra_spaces: yes
+  loop:
+    - { option: "NTP", value: "{{ infra_base_ntp|join(' ') }}" }
+    - {
+        option: "FallbackNTP",
+        value: "{{ infra_base_ntp_fallback|join(' ') }}",
+      }
+    - { option: "PollIntervalMinSec", value: "16" }
+    - { option: "PollIntervalMaxSec", value: "256" }
+  notify: restart timesyncd
+  tags: [setup, etc, etc-system]
+
+- name: enable and start timesyncd
+  systemd:
+    name: systemd-timesyncd
+    masked: no
+    enabled: yes
+    state: started
+  tags: [setup, etc, etc-system]
+
+- name: configure startup fsck
+  copy:
+    src: base/etc/e2fsck.conf
+    dest: /etc/e2fsck.conf
+    mode: 0644
+    owner: root
+    group: root
+  tags: [setup, etc, etc-system]
+
+- name: increase limits
+  copy:
+    src: base/etc/security/limits.conf
+    dest: /etc/security/limits.conf
+    mode: 0644
+    owner: root
+    group: root
+  tags: [setup, etc, etc-system]
+
+- name: add motd
+  copy:
+    dest: /etc/motd
+    mode: 0644
+    owner: root
+    group: root
+    content: "FreeBSD 10.1-RELEASE #0: Mon Nov 13 09:32:37 UTC 2014\n\nWelcome to FreeBSD!\n\n"
+  tags: [setup, etc, etc-system]
+
+- name: configure atop
+  copy:
+    src: base/etc/sysconfig/atop
+    dest: /etc/sysconfig/atop
+    mode: 0644
+    owner: root
+    group: root
+  tags: [setup, etc, etc-mon]
+
+- name: enable and start atop
+  systemd:
+    name: atop
+    masked: no
+    enabled: yes
+    state: started
+  tags: [setup, etc, etc-mon]
+
+- name: (legacy) answer positive to all autofsck questions
+  copy:
+    dest: /etc/sysconfig/autofsck
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      # accept all autofsck
+      AUTOFSCK_OPT="-y"
+  tags: [setup, etc, etc-boot]
+
+- name: create /etc/default/grub.d
+  notify: update grub config
+  file:
+    path: /etc/default/grub.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  tags: [setup, etc, etc-boot]
+
+- name: check grub configurable.d
+  lineinfile:
+    state: absent
+    path: /etc/default/grub
+    regexp: >-
+      \/etc\/default\/grub\.d\/\*
+  check_mode: true
+  changed_when: false
+  register: grub_configurable_d
+  tags: [setup, etc, etc-boot]
+
+- name: make grub more configurable.d
+  notify: update grub config
+  lineinfile:
+    state: present
+    path: /etc/default/grub
+    line: |
+
+      # managed by Ansible source includes:
+      for i in /etc/default/grub.d/*; do
+        source ${i}
+      done
+
+  when: grub_configurable_d.found == 0
+  tags: [setup, etc, etc-boot]
+
+- name: remove rhgb quiet kernel parameters
+  notify: update grub config
+  replace:
+    path: /etc/default/grub
+    regexp: "{{p}}"
+    replace: ""
+  tags: [setup, etc, etc-boot]
+  loop:
+    - '\s+rhgb'
+    - '\s+quiet'
+  loop_control:
+    loop_var: p
+
+- name: configure kernel parameters
+  notify: update grub config
+  copy:
+    dest: /etc/default/grub.d/{{ item.filename }}.cfg
+    content: |
+      GRUB_CMDLINE_LINUX_DEFAULT="${GRUB_CMDLINE_LINUX_DEFAULT} {{ item.option }}"
+    mode: 0644
+    owner: root
+    group: root
+  loop: >
+    {{
+      infra_grub_options_default |
+      union(
+        infra_main_union_suffixes |
+        union_by_suffixes(
+          prefix = 'infra_grub_options',
+          hostvars = hostvars[inventory_hostname],
+        )
+      )
+    }}
+  tags: [setup, etc, etc-boot]
+
+- name: configure systemd-resolved
+  ini_file:
+    dest: /etc/systemd/resolved.conf
+    section: Resolve
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    no_extra_spaces: yes
+  loop:
+    - { option: "Cache", value: "yes" }
+    - { option: "DNSStubListener", value: "yes" }
+    - { option: "DNS", value: "{{ infra_base_dns|join(' ') }}" }
+    - {
+        option: "FallbackDNS",
+        value: "{{ infra_base_dns_fallback|join(' ') }}",
+      }
+    - { option: "Domains", value: "{{ infra_base_dns_domains|join(' ') }}" }
+  notify: restart resolved
+  tags: [setup, etc, etc-system, etc-resolved]
+
+- name: remove one-context dns manipulators
+  file:
+    path: "/etc/one-context.d/{{ item.p }}"
+    state: absent
+  loop:
+    - { p: "loc-11-dns" }
+    - { p: "net-15-hostname" }
+
+- name: enable and start systemd-resolved
+  systemd:
+    name: systemd-resolved
+    masked: no
+    enabled: yes
+    state: started
+  tags: [setup, etc, etc-system, etc-resolved]
+
+- name: configure resolv.conf
+  file:
+    dest: /etc/resolv.conf
+    src: /run/systemd/resolve/stub-resolv.conf
+    force: yes
+    state: link
+  tags: [setup, etc, etc-system, etc-resolved]
+
+- name: enable systemd-resolved in nsswitch.conf
+  lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^(hosts:\s+files)(\s+dns\s+myhostname)?$'
+    line: '\1 resolve\2'
+    backrefs: yes
+  tags: [setup, etc, etc-system, etc-nsswitch, etc-resolved]
+
+- name: create directory for some systemd braces
+  file:
+    path: "/etc/systemd/system/{{ item }}.service.d"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  loop: "{{ infra_systemd_units_braces }}"
+  tags: [setup, etc, etc-system, etc-systemd-braces]
+
+- name: ensure some services always restartable
+  notify: systemd daemon-reload
+  copy:
+    dest: "/etc/systemd/system/{{ item }}.service.d/brace.conf"
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      [Service]
+      RestartSec=1
+      Restart=always
+      StartLimitInterval=0
+  loop: "{{ infra_systemd_units_braces }}"
+  tags: [setup, etc, etc-system, etc-systemd-braces]
+
+- name: set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  tags: [setup, etc, etc-system]
+
+- name: generate DH param file
+  openssl_dhparam:
+    path: /etc/dhparam.pem
+    size: 4096
+    mode: 0600
+    owner: root
+    group: root
+  tags: [setup, etc, etc-cry]

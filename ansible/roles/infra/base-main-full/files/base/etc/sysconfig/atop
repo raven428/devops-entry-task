@@ -1,0 +1,17 @@
+#
+# atop sysconfig
+#
+# NB managed by ansible
+#
+# Current Day format
+CURDAY=`date +%Y%m%d`
+# Log files path
+LOGPATH=/var/log/atop
+# Binaries path
+BINPATH=/usr/bin
+# PID File
+PIDFILE=/var/run/atop.pid
+# interval in seconds
+LOGINTERVAL=60
+# number of days
+LOGGENERATIONS=11

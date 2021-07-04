@@ -1,0 +1,100 @@
+---
+infra_base_packages_default:
+  - ethtool
+  - bash-completion
+  - pcp-system-tools # (dstat)
+  - mailx
+  - tcpdump
+  - vim-enhanced
+  - tmux
+  - screen
+  - rsyslog
+  - logrotate
+  - sudo
+  - wget
+  - rsync
+  - numactl
+  - ipset
+  - openssh-server
+  - openssh-clients
+  - man
+  - xz
+  - nmap
+  - atop
+  - htop
+  - iperf3
+  - traceroute
+  - whois
+  - iotop
+  - telnet
+  - bind-utils
+  - gdisk
+  - rng-tools
+  - p7zip
+  - iftop
+  - reptyr
+  - psmisc
+  - jq
+  - git
+  - bc
+  - lsof
+  #- progress (need to be compiled for centos)
+  - pv
+  - drpm
+  - tree
+  - yum-utils
+  - systemd-timesyncd
+  - e2fsprogs
+  - xfsprogs
+  - iputils
+  - iproute
+  - net-tools
+  - hostname
+  - lvm2
+  # from CentOS minimal installation:
+  - dmidecode
+  - cronie
+  - dbus-glib
+  - dracut-config-rescue
+  - groff-base
+  - hdparm
+  - lshw
+  - dnf-plugins-core
+  - microcode_ctl
+  - policycoreutils-python-utils
+  - python3-augeas
+  - augeas-libs
+infra_base_deny_packages_default:
+  - abrt
+  - "iwl*"
+infra_base_ntp:
+  - 0.de.pool.ntp.org
+  - 1.de.pool.ntp.org
+  - 2.de.pool.ntp.org
+  - 3.de.pool.ntp.org
+infra_base_ntp_fallback:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+  - 3.pool.ntp.org
+infra_base_dns:
+  - 192.168.79.2
+infra_base_dns_fallback:
+  - 1.1.1.1
+  - 8.8.8.8
+  - 9.9.9.9
+infra_base_dns_domains:
+  - o6a.ru
+  - home.o6a.ru
+infra_base_dns_suffix: o6a.ru
+infra_grub_options_default:
+  - { filename: "crashkernel", option: "crashkernel=auto" }
+  - { filename: "autofsck", option: "fsck.repair=yes" }
+  - { filename: "consobl", option: "consoleblank=0" }
+  - { filename: "audit", option: "audit=0" }
+infra_systemd_units_braces:
+  - "systemd-timesyncd"
+  - "systemd-journald"
+  - "systemd-resolved"
+  - "syslog"
+  - "sshd"
