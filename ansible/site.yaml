@@ -12,3 +12,13 @@
   roles:
     - infra/base-main-safe
   tags: [infra-base-safe]
+
+- name: apply common configuration to IaC nodes
+  hosts: main
+  remote_user: root
+  handlers:
+    - import_tasks: handlers/main.yaml
+  roles:
+    - infra/base-selinux
+    - infra/base-main-full
+  tags: [infra-base-full]

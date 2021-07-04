@@ -7,6 +7,9 @@ all:
 install_safe_base:
   children:
     p2p_entry:
+main:
+  children:
+    p2p_entry:
 p2p_entry:
   hosts:
     p2p-test:
