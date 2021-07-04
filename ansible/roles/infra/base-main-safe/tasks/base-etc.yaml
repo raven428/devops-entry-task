@@ -27,12 +27,27 @@
     state: present
   tags: [setup, etc, etc-system, upload-profiles]
 
+- name: create home directories
+  file:
+    path: "/home/{{ item.login }}"
+    owner: "{{item.uid}}"
+    group: "{{item.gid}}"
+    state: directory
+    mode: "0700"
+  loop:
+    - { login: "raven", uid: 1111, gid: 1111 }
+  tags: [setup, etc, etc-system, upload-profiles]
+
 - name: upload profiles
   synchronize:
-    src: "base/home/{{ item.login }}"
-    dest: "/home/"
+    src: "base/home/{{ item.login }}/."
+    dest: "/home/{{ item.login }}/."
     recursive: yes
-    rsync_opts: "--chown={{ item.uid }}:{{ item.gid }} -u -O"
+    rsync_opts:
+    - "-u"
+    - "-O"
+    - "--chmod=D700,F600"
+    - "--chown={{ item.uid }}:{{ item.gid }}"
   loop:
     - { login: "raven", uid: 1111, gid: 1111 }
   tags: [setup, etc, etc-system, upload-profiles]

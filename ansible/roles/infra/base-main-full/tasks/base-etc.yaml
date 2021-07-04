@@ -91,9 +91,22 @@
   tags: [setup, etc, etc-log]
 
 - name: improve ssh server security
-  action: augeas commands='set /files/etc/ssh/sshd_config/PermitRootLogin without-password'
+  action: "augeas commands='set /files/etc/ssh/sshd_config/{{a}}'"
   notify: restart sshd
   tags: [setup, etc, etc-access]
+  loop:
+    - "PermitRootLogin without-password"
+    - "AllowTcpForwarding no"
+    - "ClientAliveCountMax 2"
+    - "Compression no"
+    - "LogLevel VERBOSE"
+    - "MaxAuthTries 3"
+    - "MaxSessions 2"
+    - "TCPKeepAlive no"
+    - "X11Forwarding no"
+    - "AllowAgentForwarding no"
+  loop_control:
+    loop_var: a
 
 - name: replace sudoers
   copy:
@@ -353,3 +366,214 @@
     owner: root
     group: root
   tags: [setup, etc, etc-cry]
+
+# lynis hardening
+- name: enable and start services
+  systemd:
+    name: "{{s}}"
+    masked: no
+    enabled: yes
+    state: started
+  loop:
+    - haveged
+    - sysstat
+    - psacct
+  loop_control:
+    loop_var: s
+  tags: [setup, etc, etc-lynis]
+
+- name: improve login.defs security
+  action: "augeas commands='set /files/etc/login.defs/{{a}}'"
+  loop:
+    - "PASS_MAX_DAYS 3650"
+    - "PASS_MIN_DAYS 1"
+    - "PASS_MIN_LEN 8"
+    - "PASS_WARN_AGE 7"
+    - "UMASK 027"
+    - "FAILLOG_ENAB yes"
+    - "SHA_CRYPT_MIN_ROUNDS 12345"
+    - "SHA_CRYPT_MAX_ROUNDS 123456"
+  loop_control:
+    loop_var: a
+  tags: [setup, etc, etc-lynis]
+
+- name: replace umask to 027
+  replace:
+    path: "{{p}}"
+    regexp: 'umask \d+'
+    replace: "umask 027"
+  loop:
+    - "/etc/profile"
+    - "/etc/init.d/functions"
+    - "/etc/bashrc"
+    - "/etc/csh.cshrc"
+  loop_control:
+    loop_var: p
+  tags: [setup, etc, etc-lynis]
+
+- name: get files in /etc/profile.d
+  find:
+    paths: "/etc/profile.d"
+  register: profile_d
+  tags: [setup, etc, etc-lynis]
+
+- name: replace umask to 027 in /etc/profile.d
+  replace:
+    path: "{{f.path}}"
+    regexp: 'umask \d+'
+    replace: "umask 027"
+  loop: "{{ profile_d.files }}"
+  loop_control:
+    loop_var: f
+  tags: [setup, etc, etc-lynis]
+
+- name: checking /etc/issue
+  lineinfile:
+    state: absent
+    path: /etc/issue
+    regexp: >-
+      audit access condition connect consent criminal enforce evidence forbidden
+  check_mode: true
+  changed_when: false
+  register: etc_issue
+  tags: [setup, etc, etc-lynis]
+
+- name: filling up /etc/issue
+  lineinfile:
+    state: present
+    path: /etc/issue
+    line: |
+
+      audit access condition connect consent criminal enforce evidence forbidden intrusion law legal log monitor owner penal policy policies privacy private prohibited record restricted secure subject system terms warning
+
+  when: etc_issue.found == 0
+  tags: [setup, etc, etc-lynis]
+
+- name: checking /etc/issue.net
+  lineinfile:
+    state: absent
+    path: /etc/issue.net
+    regexp: >-
+      audit access condition connect consent criminal enforce evidence forbidden
+  check_mode: true
+  changed_when: false
+  register: etc_issue
+  tags: [setup, etc, etc-lynis]
+
+- name: filling up /etc/issue.net
+  lineinfile:
+    state: present
+    path: /etc/issue.net
+    line: |
+
+      audit access condition connect consent criminal enforce evidence forbidden intrusion law legal log monitor owner penal policy policies privacy private prohibited record restricted secure subject system terms warning
+
+  when: etc_issue.found == 0
+  tags: [setup, etc, etc-lynis]
+
+- name: mount options for /boot"
+  mount:
+    path: "/boot"
+    src: "UUID={{ ansible_mounts | json_query('[?mount == `/boot`] | [0].uuid') }}"
+    fstype: "{{ ansible_mounts | json_query('[?mount == `/boot`] | [0].fstype') }}"
+    opts: "defaults,nodev,noexec,nosuid"
+    state: "present"
+  tags: [setup, etc, etc-lynis]
+
+- name: mount options for /proc"
+  mount:
+    path: "/proc"
+    src: "proc"
+    fstype: "proc"
+    opts: "defaults,hidepid=2"
+    state: "present"
+  tags: [setup, etc, etc-lynis]
+
+- name: mount options for /dev"
+  mount:
+    path: "/dev"
+    src: "devtmpfs"
+    fstype: "devtmpfs"
+    opts: "defaults,noexec,nosuid"
+    state: "present"
+  tags: [setup, etc, etc-lynis]
+
+- name: mount options for /dev/shm"
+  mount:
+    path: "/dev/shm"
+    src: "tmpfs"
+    fstype: "tmpfs"
+    opts: "defaults,noexec,nosuid,nodev"
+    state: "present"
+  tags: [setup, etc, etc-lynis]
+
+- name: chmod important files
+  file:
+    path: "{{item}}"
+    mode: "0600"
+  loop:
+    - /boot/grub2/grub.cfg
+    - /etc/cron.deny
+    - /etc/crontab
+  tags: [setup, etc, etc-lynis]
+
+- name: chmod important directories
+  file:
+    path: "{{item}}"
+    mode: "0700"
+  loop:
+    - /etc/cron.d
+    - /etc/cron.daily
+    - /etc/cron.hourly
+    - /etc/cron.weekly
+    - /etc/cron.monthly
+  tags: [setup, etc, etc-lynis]
+
+- name: blacklist forbidden modules
+  copy:
+    dest: /etc/modprobe.d/disable-removable-storage.conf
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      blacklist usb_storage
+      blacklist ohci1394
+      blacklist firewire_ohci
+      blacklist firewire-core
+      blacklist ip_tables
+      install dccp /bin/true
+      install sctp /bin/true
+      install rds /bin/true
+      install tipc /bin/true
+  tags: [setup, etc, etc-lynis]
+
+- name: add shell timeout
+  copy:
+    dest: /etc/profile.d/TMOUT.sh
+    mode: 0644
+    owner: root
+    group: root
+    content: |
+      readonly TMOUT=31536000
+  tags: [setup, etc, etc-lynis]
+
+- name: add self to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: >-
+      ^{{ ansible_default_ipv4 | regex_replace('\.', '\\.') }}
+    line: "{{ ansible_default_ipv4.address }} {{ansible_fqdn}} {{ansible_hostname}}"
+    state: present
+  tags: [setup, etc, etc-lynis]
+
+- name: disable usb devices authorization
+  copy:
+    dest: /etc/udev/rules.d/disable-usb-devices.rules
+    content: >
+      ACTION=="add", SUBSYSTEMS=="usb", RUN+="/bin/sh -c 'for host in
+      $(find /sys/bus/usb/devices -name \"usb*\" -type l -print); do
+      echo 0 > $host/authorized_default; echo 0 > $host/authorized; done'"
+    mode: "0644"
+    force: "yes"
+    follow: "no"
+  tags: [setup, etc, etc-lynis]

@@ -64,6 +64,11 @@ infra_base_packages_default:
   - policycoreutils-python-utils
   - python3-augeas
   - augeas-libs
+# lynis hardening:
+  - auter
+  - psacct
+  - haveged
+  - sysstat
 infra_base_deny_packages_default:
   - abrt
   - "iwl*"
@@ -78,10 +83,10 @@ infra_base_ntp_fallback:
   - 2.pool.ntp.org
   - 3.pool.ntp.org
 infra_base_dns:
-  - 192.168.79.2
-infra_base_dns_fallback:
   - 1.1.1.1
   - 8.8.8.8
+infra_base_dns_fallback:
+  - 8.8.4.4
   - 9.9.9.9
 infra_base_dns_domains:
   - o6a.ru
