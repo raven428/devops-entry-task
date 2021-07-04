@@ -1,0 +1,78 @@
+---
+- name: install moreutils with epel to redhat derivatives
+  block:
+  - name: add epel repo to RedHat derivatives
+    package:
+      name: >-
+        {% if ansible_distribution_file_variety == 'RedHat' -%}
+          epel-release
+        {%- elif ansible_distribution_file_variety == 'OracleLinux' -%}
+          oracle-epel-release-el{{ansible_distribution_major_version}}
+        {%- else -%}
+          unknown-redhat-epel-release
+        {%- endif %}
+      state: present
+    tags: [install-moreutils]
+  - name: force to latest repos
+    dnf:
+      name: >-
+        {%
+          if ansible_distribution == 'CentOS' and
+          ansible_distribution_major_version|int >= 8
+        -%}
+          centos-stream-repos
+        {%-
+          elif ansible_distribution == 'OracleLinux' and
+          ansible_distribution_major_version|int >= 8
+        -%}
+          oraclelinux-release-el8
+        {%- endif %}
+      state: latest
+      allowerasing: yes
+    tags: [install-moreutils]
+  - name: install moreutils to RedHat derivatives
+    yum:
+      name: moreutils
+      enablerepo: >-
+        {%
+          if ansible_distribution == 'CentOS' and
+          ansible_distribution_major_version|int >= 8
+        -%}
+          powertools,epel
+        {%-
+          elif ansible_distribution == 'OracleLinux' and
+          ansible_distribution_major_version|int >= 8
+        -%}
+          ol8_codeready_builder,epel
+        {%- else -%}
+          epel
+        {%- endif %}
+      state: present
+    tags: [install-moreutils]
+  when:
+    - ansible_distribution_file_variety == 'RedHat' or ansible_distribution_file_variety == 'OracleLinux'
+    - ansible_distribution_major_version|int >= 7
+
+- name: install moreutils to non-RedHat derivatives
+  package:
+    name: moreutils
+    state: present
+  tags: [install-moreutils]
+  when:
+    - ansible_distribution != 'CentOS'
+    - ansible_distribution != 'OracleLinux'
+
+- name: install selinux python packages
+  notify: refresh facts
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ infra_selinux_packages }}"
+
+- name: ensure openssh-server to latest for hardening
+  package:
+    name: "openssh-server"
+    state: latest
+  notify: restart sshd
+  when:
+    - ssh_server_hardening | bool

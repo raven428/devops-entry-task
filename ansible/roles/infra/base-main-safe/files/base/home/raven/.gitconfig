@@ -1,0 +1,5 @@
+[user]
+ email = i@o6a.ru
+ name = root
+[push]
+ default = matching

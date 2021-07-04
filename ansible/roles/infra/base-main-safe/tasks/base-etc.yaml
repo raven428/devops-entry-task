@@ -1,0 +1,126 @@
+---
+- name: gathering service facts
+  service_facts:
+  tags: [always]
+
+- name: maintain root public keys
+  authorized_key:
+    user: root
+    key: "{{
+      infra_base_root_keys_default |
+      union(
+        infra_main_union_suffixes |
+        union_by_suffixes(
+          prefix = 'infra_base_root_keys',
+          hostvars = hostvars[inventory_hostname],
+        )
+      ) |
+      join('\n')
+    }}"
+    state: present
+    exclusive: True
+  tags: [setup, etc, etc-access]
+
+- name: install rsync
+  package:
+    name: rsync
+    state: present
+  tags: [setup, etc, etc-system, upload-profiles]
+
+- name: upload profiles
+  synchronize:
+    src: "base/home/{{ item.login }}"
+    dest: "/home/"
+    recursive: yes
+    rsync_opts: "--chown={{ item.uid }}:{{ item.gid }} -u -O"
+  loop:
+    - { login: "raven", uid: 1111, gid: 1111 }
+  tags: [setup, etc, etc-system, upload-profiles]
+
+- name: configure firewalld if running
+  block:
+    - name: create firewalld service dir
+      file:
+        mode: "0750"
+        path: "{{dir}}"
+        state: directory
+        owner: "root"
+        group: "root"
+      loop:
+        - "/etc/firewalld"
+        - "/etc/firewalld/services"
+      loop_control:
+        loop_var: dir
+      tags: [firewalld-promnode]
+    - name: set exporters ports in promnode firewalld service
+      template:
+        src: "firewalld-service.xml.j2"
+        dest: "/etc/firewalld/services/promnode.xml"
+        owner: "root"
+        group: "root"
+        force: "yes"
+        follow: "no"
+        mode: "0644"
+      vars:
+        desc: prometheus exporters ports
+        proto_ports: "{{infra_firewalld_promnode_proto_ports}}"
+      notify: reload firewalld
+      tags: [firewalld-promnode]
+  when:
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
+
+- name: hardening ssh server protocols
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version|int >= 7
+    - ssh_server_hardening | bool
+  copy:
+    dest: /etc/sysconfig/sshd
+    content: |
+      #
+      # managed by Ansible
+      #
+      SSH_USE_STRONG_RNG=0
+      {{infra_sshd_variable_name}}=' \
+      {% if infra_sshd_ciphers | default([]) | length > 0 %}
+        -oCiphers={{infra_sshd_ciphers | join(',')}} \
+      {% endif %}{% if infra_sshd_MACs | default([]) | length > 0 %}
+        -oMACs={{infra_sshd_MACs | join(',')}} \
+      {% endif %}{% if infra_sshd_kex_gss | default([]) | length > 0 %}
+        -oGSSAPIKexAlgorithms={{infra_sshd_kex_gss | join(',')}} \
+      {% endif %}{% if infra_sshd_kex | default([]) | length > 0 %}
+        -oKexAlgorithms={{infra_sshd_kex | join(',')}} \
+      {% endif %}{% if infra_sshd_host_key | default([]) | length > 0 %}
+        -oHostKeyAlgorithms={{infra_sshd_host_key | join(',')}} \
+      {% endif %}{% if infra_sshd_pubkey_type | default([]) | length > 0 %}
+        -oPubkeyAcceptedKeyTypes={{infra_sshd_pubkey_type | join(',')}} \
+      {% endif %}{% if infra_sshd_CA_sig | default([]) | length > 0 %}
+        -oCASignatureAlgorithms={{infra_sshd_CA_sig | join(',')}} \
+      {% endif %}
+      '
+    mode: 0640
+    owner: root
+    group: root
+  notify: restart sshd
+  tags: [setup, etc, etc-sshd]
+
+- name: check if {{sshd_moduli_file}} contains weak DH parameters
+  shell: awk '$5 < {{sshd_moduli_minimum}}' {{sshd_moduli_file}}
+  register: sshd_register_moduli
+  changed_when: false
+  check_mode: false
+  when: ssh_server_hardening | bool
+  tags: [setup, etc, etc-sshd]
+
+- name: remove all small primes
+  shell: >
+    awk '$5 >= {{sshd_moduli_minimum}}'
+    {{sshd_moduli_file}} > {{sshd_moduli_file}}.new ;
+    [ -r {{sshd_moduli_file}}.new -a -s {{sshd_moduli_file}}.new ] &&
+    mv {{sshd_moduli_file}}.new {{sshd_moduli_file}} || true
+  notify: restart sshd
+  when:
+    - ssh_server_hardening | bool
+    - sshd_register_moduli.stdout
+  tags: [setup, etc, etc-sshd]

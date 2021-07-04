@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+{{ansible_managed}}
+{#(debug) proto_ports variable:
+ {{proto_ports | default(mandatory)}}#}
+-->
+<service>
+  <short>{{ desc | default(mandatory) }}</short>
+{% for proto, ports in proto_ports.items() %}{% for port in ports %}
+  <port protocol="{{proto}}" port="{{port}}" />
+{% endfor %}{% endfor %}
+</service>

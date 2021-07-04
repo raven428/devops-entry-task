@@ -1,0 +1,10 @@
+#
+# $Id: .inputrc,v 1.2 2014/11/04 07:43:20 raven Exp $
+#
+# для bash
+"\e[3~": delete-char
+set completion-ignore-case on
+
+# для CPAN
+"\e[1~": beginning-of-line
+"\e[F": end-of-line

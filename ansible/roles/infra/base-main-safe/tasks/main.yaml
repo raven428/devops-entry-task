@@ -1,0 +1,13 @@
+---
+- name: load role variables depend OS
+  import_role:
+    name: infra/base-vars
+  tags: [safe-vars-loader]
+
+- name: install base safe packages
+  import_tasks: base-pkg.yaml
+  tags: [setup, pkg]
+
+- name: upload base safe configs
+  import_tasks: base-etc.yaml
+  tags: [setup, etc]
