@@ -1,0 +1,58 @@
+---
+- name: refresh facts
+  setup:
+
+- name: systemd daemon-reload
+  systemd:
+    daemon_reload: yes
+
+- name: apply sysctl
+  systemd:
+    name: systemd-sysctl
+    state: restarted
+
+- name: restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+
+- name: restart journald
+  systemd:
+    name: systemd-journald
+    state: restarted
+
+- name: restart timesyncd
+  systemd:
+    name: systemd-timesyncd
+    state: restarted
+
+- name: restart resolved
+  systemd:
+    name: systemd-resolved
+    state: restarted
+
+- name: restart sshd
+  systemd:
+    name: sshd
+    state: restarted
+
+- name: update grub config
+  shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: reload firewalld
+  shell:
+    cmd: "firewall-cmd --reload"
+
+- name: reload firewalld ignore
+  shell:
+    cmd: "firewall-cmd --reload"
+  ignore_errors: true
+
+- name: restart infra-collectors-poller
+  systemd:
+    name: infra-collectors-poller
+    state: restarted
+
+- name: perform reboot
+  reboot:
+    msg: "initiated by global ansible"
