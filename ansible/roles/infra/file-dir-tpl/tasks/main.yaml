@@ -1,0 +1,163 @@
+---
+- name: ensure some groups
+  group:
+    name: "{{ i.name | mandatory }}"
+    gid: "{{ i.gid | default(omit) }}"
+    local: "{{ i.local | default(omit) }}"
+    state: "{{ i.state | default('present') }}"
+    system: "{{ i.system | default(omit) }}"
+    non_unique: "{{ i.non_unique | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_groups2create }}"
+
+- name: ensure some users
+  user:
+    name: "{{ i.name | mandatory }}"
+    state: "{{ i.state | default('present') }}"
+    append: "{{ i.append | default(omit) }}"
+    authorization: "{{ i.authorization | default(omit) }}"
+    comment: "{{ i.comment | default(omit) }}"
+    create_home: "{{ i.create_home | default('no') }}"
+    expires: "{{ i.expires | default(omit) }}"
+    force: "{{ i.force | default(omit) }}"
+    generate_ssh_key: "{{ i.generate_ssh_key | default(omit) }}"
+    group: "{{ i.group | default(i.name) | default(omit) }}"
+    groups: "{{ i.groups | default(omit) }}"
+    hidden: "{{ i.hidden | default(omit) }}"
+    home: "{{ i.home | default(omit) }}"
+    local: "{{ i.local | default(omit) }}"
+    login_class: "{{ i.login_class | default(omit) }}"
+    move_home: "{{ i.move_home | default(omit) }}"
+    non_unique: "{{ i.non_unique | default(omit) }}"
+    password: "{{ i.password | default(omit) }}"
+    password_expire_max: "{{ i.password_expire_max | default(omit) }}"
+    password_expire_min: "{{ i.password_expire_min | default(omit) }}"
+    password_lock: "{{ i.password_lock | default(omit) }}"
+    profile: "{{ i.profile | default(omit) }}"
+    remove: "{{ i.remove | default(omit) }}"
+    role: "{{ i.role | default(omit) }}"
+    seuser: "{{ i.seuser | default(omit) }}"
+    shell: "{{ i.shell | default(omit) }}"
+    skeleton: "{{ i.skeleton | default(omit) }}"
+    ssh_key_bits: "{{ i.ssh_key_bits | default(omit) }}"
+    ssh_key_comment: "{{ i.ssh_key_comment | default(omit) }}"
+    ssh_key_file: "{{ i.ssh_key_file | default(omit) }}"
+    ssh_key_passphrase: "{{ i.ssh_key_passphrase | default(omit) }}"
+    ssh_key_type: "{{ i.ssh_key_type | default(omit) }}"
+    system: "{{ i.system | default(omit) }}"
+    uid: "{{ i.uid | default(omit) }}"
+    update_password: "{{ i.update_password | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_users2create }}"
+
+- name: create some directory
+  file:
+    state: directory
+    path: "{{ i.path | mandatory }}"
+    recurse: "{{ i.recurse | default(omit) }}"
+    force: "{{ i.force | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    owner: "{{ i.owner | default(omit) }}"
+    group: "{{ i.group | default(omit) }}"
+    mode: "{{ i.mode | default('0755') }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_dirs2create }}"
+
+- name: upload some templates
+  template:
+    src: "{{ i.src | mandatory }}"
+    dest: "{{ i.dest | mandatory }}"
+    force: "{{ i.force | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    owner: "{{ i.owner | default(omit) }}"
+    group: "{{ i.group | default(omit) }}"
+    mode: "{{ i.mode | default('0644') }}"
+  vars:
+    v: "{{ i.vars | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_templates2upload }}"
+
+- name: upload some files
+  copy:
+    src: "{{ i.src | mandatory }}"
+    dest: "{{ i.dest | mandatory }}"
+    force: "{{ i.force | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    owner: "{{ i.owner | default(omit) }}"
+    group: "{{ i.group | default(omit) }}"
+    mode: "{{ i.mode | default('0644') }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_files2upload }}"
+
+- name: upload some content
+  copy:
+    dest: "{{ i.dest | mandatory }}"
+    content: "{{ i.content | mandatory }}"
+    force: "{{ i.force | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    owner: "{{ i.owner | default(omit) }}"
+    group: "{{ i.group | default(omit) }}"
+    mode: "{{ i.mode | default('0644') }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_content2upload }}"
+
+- name: rsync some files
+  synchronize:
+    src: "{{ i.src | mandatory }}"
+    dest: "{{ i.dest | mandatory }}"
+    recursive: "{{ i.recursive | default(omit) }}"
+    delete: "{{ i.delete | default(omit) }}"
+    rsync_opts: "{{ i.rsync_opts | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_tree2rsync }}"
+
+- name: systemd some units
+  systemd:
+    name: "{{ i.name | mandatory }}"
+    scope: "{{ i.scope | default(omit) }}"
+    state: "{{ i.state | default(omit) }}"
+    force: "{{ i.force | default(omit) }}"
+    masked: "{{ i.masked | default(omit) }}"
+    enabled: "{{ i.enabled | default(omit) }}"
+    no_block: "{{ i.no_block | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_systemd4units }}"
+
+- name: ensure some keys
+  authorized_key:
+    user: "{{ i.user | mandatory }}"
+    key: "{{ i.key | mandatory }}"
+    exclusive: "{{ i.state | default(true) }}"
+    state: "{{ i.state | default('present') }}"
+    comment: "{{ i.comment | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    key_options: "{{ i.key_options | default(omit) }}"
+    manage_dir: "{{ i.manage_dir | default(omit) }}"
+    path: "{{ i.path | default(omit) }}"
+    validate_certs: "{{ i.validate_certs | default(omit) }}"
+  notify: "{{ i.notify | default(omit) }}"
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_key2user }}"
+
+- name: download some binaries
+  include_tasks: file2down.yaml
+  loop_control:
+    loop_var: i
+  loop: "{{ infra_fdt_file2down }}"

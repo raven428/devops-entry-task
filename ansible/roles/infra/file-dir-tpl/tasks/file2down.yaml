@@ -1,0 +1,106 @@
+---
+- name: download to local
+  become: false
+  get_url:
+    url: "{{ i.url | default(mandatory) }}"
+    dest: "/tmp/{{
+      i.temp_name | default(i.url |
+      regex_replace('[^a-z0-9]', '_'))
+    }}"
+    mode: "{{ i.temp_mode | default('0644') }}"
+  register: _download_archive
+  until: _download_archive is succeeded
+  retries: 5
+  delay: 2
+  delegate_to: localhost
+  check_mode: false
+
+- name: unpack archive block
+  block:
+# variable example:
+# infra_fdt_file2down_host:
+#   - url: "https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz"
+#     creates: node_exporter-1.1.2.linux-amd64
+#     files:
+#       - name: node_exporter-1.1.2.linux-amd64/node_exporter
+#         dest: /usr/local/bin/node-exp1
+#         mode: '0755'
+#     archive: true
+  - name: recursive create directory
+    become: false
+    file:
+      path: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}-dir"
+      state: directory
+      mode: '0755'
+    delegate_to: localhost
+    check_mode: false
+  - name: unpack from archive
+    become: false
+    unarchive:
+      src: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}"
+      dest: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}-dir"
+      creates: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}-dir/{{ i.creates }}"
+    delegate_to: localhost
+    check_mode: false
+    register: unarchive_result
+    ignore_errors: true
+  - name: unarchive failed, trying to decompress
+    decompress:
+      src: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}"
+      dst: "/tmp/{{
+        i.temp_name | default(i.url |
+        regex_replace('[^a-z0-9]', '_'))
+      }}-dir/{{ i.creates }}"
+    delegate_to: localhost
+    check_mode: false
+    when: unarchive_result.failed == true
+  when: i.archive
+
+- name: propagate unpacked files
+  copy:
+    src: "/tmp/{{
+      i.temp_name | default(i.url |
+      regex_replace('[^a-z0-9]', '_'))
+    }}-dir/{{ f.name }}"
+    dest: "{{ f.dest | default(mandatory) }}"
+    force: "{{ f.force | default(omit) }}"
+    follow: "{{ f.follow | default(omit) }}"
+    owner: "{{ f.owner | default(omit) }}"
+    group: "{{ f.group | default(omit) }}"
+    mode: "{{ f.mode | default('0644') }}"
+  notify: "{{ f.notify | default(omit) }}"
+  check_mode: false
+  loop_control:
+    loop_var: f
+  loop: "{{ i.files | default([]) | list }}"
+
+- name: propagate downloaded file
+  copy:
+    src: "/tmp/{{
+      i.temp_name | default(i.url |
+      regex_replace('[^a-z0-9]', '_'))
+    }}"
+    dest: "{{ i.dest | default(mandatory) }}"
+    force: "{{ i.force | default(omit) }}"
+    follow: "{{ i.follow | default(omit) }}"
+    owner: "{{ i.owner | default(omit) }}"
+    group: "{{ i.group | default(omit) }}"
+    mode: "{{ i.mode | default('0755') }}"
+  notify: "{{ i.notify | default(omit) }}"
+  check_mode: false
+  when: not i.archive

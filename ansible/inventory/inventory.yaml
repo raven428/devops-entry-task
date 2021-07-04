@@ -10,6 +10,9 @@ install_safe_base:
 main:
   children:
     p2p_entry:
+file_dir_tpl:
+  children:
+    p2p_entry:
 p2p_entry:
   hosts:
     p2p-test:

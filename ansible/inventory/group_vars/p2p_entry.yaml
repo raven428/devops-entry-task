@@ -1,1 +1,8 @@
 ---
+infra_fdt_groups2create_p2p_entry:
+  - name: raven
+    gid: 1111
+infra_fdt_users2create_p2p_entry:
+  - name: raven
+    uid: 1111
+    groups: wheel

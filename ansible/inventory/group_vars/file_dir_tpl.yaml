@@ -1,0 +1,102 @@
+---
+infra_fdt_union_suffixes:
+  - p2p_entry
+  - metric_exporters
+  - nginx
+  - host
+
+infra_fdt_suffixes: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_suffixes',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_tree2rsync: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_tree2rsync',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_dirs2create: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_dirs2create',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_files2upload: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_files2upload',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_systemd4units: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_systemd4units',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_content2upload: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_content2upload',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_docker_compose: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_docker_compose',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_templates2upload: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_templates2upload',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_users2create: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_users2create',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_groups2create: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_groups2create',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_key2user: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_key2user',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"
+
+infra_fdt_file2down: "{{
+  infra_fdt_union_suffixes |
+  union_by_suffixes(
+    prefix = 'infra_fdt_file2down',
+    hostvars = hostvars[inventory_hostname],
+  )
+}}"

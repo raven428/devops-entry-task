@@ -1,0 +1,8 @@
+---
+infra_fdt_suffixes: []
+infra_fdt_tree2rsync: []
+infra_fdt_dirs2create: []
+infra_fdt_files2upload: []
+infra_fdt_systemd4units: []
+infra_fdt_content2upload: []
+infra_fdt_templates2upload: []

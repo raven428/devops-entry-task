@@ -22,3 +22,12 @@
     - infra/base-selinux
     - infra/base-main-full
   tags: [infra-base-full]
+
+- name: perform some files, dirs, and templates upload
+  hosts: file_dir_tpl
+  remote_user: root
+  handlers:
+    - import_tasks: handlers/main.yaml
+  roles:
+    - infra/file-dir-tpl
+  tags: [file-dir-tpl]
