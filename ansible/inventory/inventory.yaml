@@ -1,0 +1,13 @@
+---
+all:
+  vars:
+    infra_base_selinux_state: enforcing
+    plabel_env: urgent
+    plabel_team: infra
+install_safe_base:
+  children:
+    p2p_entry:
+p2p_entry:
+  hosts:
+    p2p-test:
+      ansible_host: p2p-test.local

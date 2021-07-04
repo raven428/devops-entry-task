@@ -1,0 +1,9 @@
+---
+infra_main_union_suffixes:
+  - het_all
+  - het_bare
+  - het_vm
+  - web_all
+  - web_static
+  - web_reverse
+  - host
