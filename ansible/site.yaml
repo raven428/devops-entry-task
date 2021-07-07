@@ -52,3 +52,10 @@
   roles:
     - external/grafana
   tags: [grafana-role]
+
+- name: grafana infra configuration
+  hosts: grafana
+  remote_user: root
+  roles:
+    - infra/grafana
+  tags: [grafana-infra]

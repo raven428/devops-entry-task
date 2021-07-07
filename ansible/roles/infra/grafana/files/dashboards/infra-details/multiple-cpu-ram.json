@@ -1,0 +1,906 @@
+{
+  "__inputs": [
+    {
+      "name": "DASOU",
+      "label": "prom-infra",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "7.3.2"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1614762362907,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": "$DASOU",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "panels": [],
+      "repeat": "instance",
+      "title": "Node [$instance]",
+      "type": "row"
+    },
+    {
+      "datasource": "$DASOU",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "rgb(0, 0, 0)",
+            "mode": "fixed"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "hideTimeOverride": true,
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name"
+      },
+      "pluginVersion": "7.3.2",
+      "targets": [
+        {
+          "expr": "count(up{instance=~\"$instance\"}) by (nick)",
+          "format": "heatmap",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "Hostname: [{{nick}}] ($interval)",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "10m",
+      "timeShift": null,
+      "title": "",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$DASOU",
+      "decimals": null,
+      "description": "[$interval]",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 10,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 2
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "interval": "$interval",
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sideWidth": 250,
+        "sort": null,
+        "sortDesc": null,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 4,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.2",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:94",
+          "alias": "Total",
+          "color": "#000000",
+          "fill": 0,
+          "legend": false,
+          "linewidth": 2,
+          "stack": false
+        },
+        {
+          "$$hashKey": "object:95",
+          "alias": "System",
+          "color": "#ed7600",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:96",
+          "alias": "User",
+          "color": "#0000ff",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:97",
+          "alias": "IOwait",
+          "color": "#d8ace0",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:98",
+          "alias": "Idle",
+          "color": "#aaaba1",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:99",
+          "alias": "Interrupts",
+          "color": "#00a0c1",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:100",
+          "alias": "Nice",
+          "color": "#00ff00",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:101",
+          "alias": "Steal",
+          "color": "#fff200",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:102",
+          "alias": "Other",
+          "color": "#0a0a0a",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:103",
+          "alias": "/^Hostname\\: /",
+          "color": "rgba(0, 0, 0, 0)",
+          "legend": true,
+          "linewidth": 0
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=~\".*irq\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Interrupts",
+          "refId": "D",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"iowait\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "IOwait",
+          "refId": "C",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"system\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "System",
+          "refId": "A",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"user\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "User",
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"nice\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Nice",
+          "refId": "I",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"steal\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Steal",
+          "refId": "H",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode!~\"idle|user|system|iowait|.*irq|steal|nice\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Other",
+          "refId": "E",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Idle",
+          "refId": "F",
+          "step": 240
+        },
+        {
+          "expr": "sum(rate(node_cpu_seconds_total{instance=~\"$instance\"}[$__rate_interval])) * 100",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Total",
+          "refId": "G",
+          "step": 240
+        },
+        {
+          "expr": "count(up{instance=~\"$instance\"}) by(nick)",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Hostname: [{{nick}}]",
+          "refId": "J"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "CPU",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$DASOU",
+      "decimals": 2,
+      "description": "[$interval]",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 10,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 2
+      },
+      "hiddenSeries": false,
+      "id": 5,
+      "interval": "$interval",
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sideWidth": 250,
+        "sort": null,
+        "sortDesc": null,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 4,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.2",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:223",
+          "alias": "Total",
+          "color": "#000000",
+          "fill": 0,
+          "legend": false,
+          "linewidth": 2,
+          "stack": false
+        },
+        {
+          "$$hashKey": "object:224",
+          "alias": "Used",
+          "color": "#0000ff",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:225",
+          "alias": "Free",
+          "color": "#aaaba1",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:226",
+          "alias": "Cache",
+          "color": "#ffc73b",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:227",
+          "alias": "Buffers",
+          "color": "#FF9830",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:228",
+          "alias": "Swap",
+          "color": "#8F3BB8",
+          "legend": false
+        },
+        {
+          "$$hashKey": "object:229",
+          "alias": "/^Hostname\\: /",
+          "color": "rgba(0, 0, 0, 0)",
+          "legend": true,
+          "linewidth": 0
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "max(node_memory_MemTotal_bytes{instance=~\"$instance\"} - node_memory_MemFree_bytes{instance=~\"$instance\"} - (node_memory_Cached_bytes{instance=~\"$instance\"} + node_memory_Buffers_bytes{instance=~\"$instance\"}))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Used",
+          "refId": "C",
+          "step": 240
+        },
+        {
+          "expr": "max(node_memory_Cached_bytes{instance=~\"$instance\"})",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Cache",
+          "refId": "A",
+          "step": 240
+        },
+        {
+          "expr": "max(node_memory_Buffers_bytes{instance=~\"$instance\"})",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Buffers",
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "expr": "max(node_memory_MemFree_bytes{instance=~\"$instance\"})",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Free",
+          "refId": "I",
+          "step": 240
+        },
+        {
+          "expr": "max((node_memory_SwapTotal_bytes{instance=~\"$instance\"} - node_memory_SwapFree_bytes{instance=~\"$instance\"}))",
+          "format": "time_series",
+          "hide": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Swap",
+          "refId": "H",
+          "step": 240
+        },
+        {
+          "expr": "max(node_memory_MemTotal_bytes{instance=~\"$instance\"})",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "Total",
+          "refId": "D",
+          "step": 240
+        },
+        {
+          "expr": "count(up{instance=~\"$instance\"}) by(nick)",
+          "interval": "",
+          "legendFormat": "Hostname: [{{nick}}]",
+          "refId": "E"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RAM",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "auto": true,
+        "auto_count": "200",
+        "auto_min": "30s",
+        "current": {
+          "selected": false,
+          "text": "auto",
+          "value": "$__auto_interval_interval"
+        },
+        "error": null,
+        "hide": 0,
+        "label": "i",
+        "name": "interval",
+        "options": [
+          {
+            "selected": true,
+            "text": "auto",
+            "value": "$__auto_interval_interval"
+          },
+          {
+            "selected": false,
+            "text": "30s",
+            "value": "30s"
+          },
+          {
+            "selected": false,
+            "text": "1m",
+            "value": "1m"
+          },
+          {
+            "selected": false,
+            "text": "2m",
+            "value": "2m"
+          },
+          {
+            "selected": false,
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "selected": false,
+            "text": "10m",
+            "value": "10m"
+          },
+          {
+            "selected": false,
+            "text": "30m",
+            "value": "30m"
+          },
+          {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "6h",
+            "value": "6h"
+          },
+          {
+            "selected": false,
+            "text": "12h",
+            "value": "12h"
+          },
+          {
+            "selected": false,
+            "text": "1d",
+            "value": "1d"
+          },
+          {
+            "selected": false,
+            "text": "7d",
+            "value": "7d"
+          },
+          {
+            "selected": false,
+            "text": "14d",
+            "value": "14d"
+          },
+          {
+            "selected": false,
+            "text": "30d",
+            "value": "30d"
+          }
+        ],
+        "query": "30s,1m,2m,5m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
+        "queryValue": "",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "type": "interval"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "prom-infra",
+          "value": "prom-infra"
+        },
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": "DS",
+        "multi": false,
+        "name": "DASOU",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "node-exporter",
+          "value": "node-exporter"
+        },
+        "datasource": "$DASOU",
+        "definition": "label_values(up, job)",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "",
+        "multi": true,
+        "name": "job",
+        "options": [],
+        "query": "label_values(up, job)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "node-nebula-ts",
+          "value": "node-nebula-ts"
+        },
+        "datasource": "$DASOU",
+        "definition": "label_values(up{job=~\"$job\"}, cluster)",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": "label_values(up{job=~\"$job\"}, cluster)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": ".+",
+          "value": ".+"
+      },
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "filter",
+        "options": [
+          {
+            "selected": true,
+            "text": ".+",
+            "value": ".+"
+          }
+        ],
+        "query": ".+",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "prom-infra",
+          "value": "prom-infra"
+        },
+        "datasource": "$DASOU",
+        "definition": "label_values(up{job=~\"$job\",cluster=~\"$cluster\",nick=~\"$filter\"}, nick)",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "",
+        "multi": true,
+        "name": "nick",
+        "options": [],
+        "query": "label_values(up{job=~\"$job\",cluster=~\"$cluster\",nick=~\"$filter\"}, nick)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {},
+        "datasource": "$DASOU",
+        "definition": "label_values(up{job=~\"$job\",cluster=~\"$cluster\",nick=~\"$nick\"}, instance)",
+        "error": null,
+        "hide": 2,
+        "includeAll": true,
+        "label": "",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": "label_values(up{job=~\"$job\",cluster=~\"$cluster\",nick=~\"$nick\"}, instance)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "30s",
+      "1m",
+      "3m",
+      "5m",
+      "10m",
+      "20m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "3h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "4d",
+      "7d",
+      "14d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "Multiple CPU+RAM",
+  "uid": "Multiple-CPU-RAM",
+  "version": 25
+}

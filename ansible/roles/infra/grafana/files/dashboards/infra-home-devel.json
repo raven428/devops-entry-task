@@ -1,0 +1,161 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Infra home devel",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "tag1"
+      ],
+      "targetBlank": false,
+      "title": "tag1",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": "http://ya.ru"
+    },
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "all",
+      "type": "dashboards"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 0
+      },
+      "id": 123123,
+      "type": "gettingstarted"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "title": "",
+      "type": "welcome"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "folderId": null,
+      "gridPos": {
+        "h": 26,
+        "w": 18,
+        "x": 0,
+        "y": 3
+      },
+      "headings": false,
+      "id": 6,
+      "limit": 22,
+      "links": [],
+      "pluginVersion": "7.3.2",
+      "query": "",
+      "recent": false,
+      "repeatDirection": "v",
+      "search": true,
+      "starred": false,
+      "tags": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Dashboards",
+      "type": "dashlist"
+    },
+    {
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 8,
+      "options": {
+        "content": "# Please note\n### This is development version of Grafana. Remember to **AVOID** storing something here. It may be destroyed without warnings - anyone have full access as you are.\nProduction dashboards are protected from modifications, because deployed by Ansible as provisioned. To modify existing dashboards, please make copy - it will be writeable. After development finish, perform `merge request` to `infra/configs` repository either ask Infra team to do.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "7.3.2",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Notice",
+      "type": "text"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": false,
+    "refresh_intervals": [
+      "1h"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Infra home devel",
+  "uid": "home",
+  "version": 4
+}

@@ -1,0 +1,33 @@
+---
+- name: rsync dashboards
+  synchronize:
+    src: "dashboards"
+    dest: "/etc/grafana/"
+    recursive: yes
+    delete: yes
+    rsync_opts: "--chown=root:grafana"
+  notify: restart grafana
+  tags: [grafana-rsync-dashboards]
+
+- name: fill provisioning
+  copy:
+    dest: "/etc/grafana/provisioning/dashboards/{{item.path}}.yaml"
+    content: |
+      apiVersion: 1
+      providers:
+      - name: '{{item.path}}'
+        orgId: 1
+        type: file
+        folder: '{{item.path}}'
+        disableDeletion: false
+        updateIntervalSeconds: 55
+        allowUiUpdates: false
+        options:
+          path: "/etc/grafana/dashboards/{{item.path}}"
+    backup: false
+    owner: root
+    group: grafana
+    mode: 0640
+  with_filetree: dashboards/
+  when: item.state == 'directory'
+  notify: restart grafana
