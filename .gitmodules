@@ -10,3 +10,11 @@
 	path = ansible/roles/external/grafana
 	url = git@github.com:raven428/ansible-grafana.git
 	branch = additional-sections
+[submodule "ansible/roles/external/nginx-install"]
+	path = ansible/roles/external/nginx-install
+	url = git@github.com:nginxinc/ansible-role-nginx.git
+	branch = tags/0.19.1
+[submodule "ansible/roles/external/nginx-config"]
+	path = ansible/roles/external/nginx-config
+	url = git@github.com:nginxinc/ansible-role-nginx-config.git
+	branch = tags/0.3.2
