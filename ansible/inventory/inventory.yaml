@@ -55,3 +55,6 @@ grafana:
     plabel_env: prod
   children:
     p2p_entry:
+nginx:
+  children:
+    p2p_entry:

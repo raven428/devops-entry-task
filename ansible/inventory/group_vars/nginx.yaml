@@ -1,0 +1,337 @@
+---
+nginx_start: true
+nginx_state: latest
+nginx_branch: stable
+nginx_enable: true
+nginx_install: true
+# should be permanently disabled after install, because the role is switching sestatus between permissive and enforcing every run
+nginx_selinux: true
+dehydrated_certs_path: "/etc/dehydrated/certs"
+
+infra_web_suffixes:
+  - default
+  - p2p_entry
+  - nginx
+  - host
+
+nginx_main_suffix: "o6a.ru"
+nginx_main_domain: >-
+  {{ ansible_hostname | default('nope') }}.{{nginx_main_suffix}} {{
+    infra_web_suffixes |
+    join_by_suffixes(
+      prefix = 'nginx_main_domain',
+      hostvars = hostvars[inventory_hostname],
+    )
+  }}
+
+nginx_main_cert_dir: "main"
+dehydrated_domains: |
+  {{nginx_main_domain}} > {{nginx_main_cert_dir}}
+  {{
+    infra_web_suffixes |
+    join_by_suffixes(
+      prefix = 'dehydrated_domains',
+      hostvars = hostvars[inventory_hostname],
+    )
+  }}
+
+infra_cert_dest_path_main: "{{dehydrated_certs_path}}/{{nginx_main_cert_dir}}"
+infra_fdt_dirs2create_nginx:
+  - mode: "0755"
+    path: "/etc/nginx"
+  - mode: "0700"
+    path: "{{infra_cert_dest_path_main}}"
+infra_cert_source_path: "files/nginx/temp-certs"
+infra_fdt_files2upload_nginx:
+  - src: "{{infra_cert_source_path}}/chain.pem"
+    dest: "{{infra_cert_dest_path_main}}/chain.pem"
+    mode: "0600"
+    force: "no"
+  - src: "{{infra_cert_source_path}}/fullchain.pem"
+    dest: "{{infra_cert_dest_path_main}}/fullchain.pem"
+    mode: "0600"
+    force: "no"
+  - src: "{{infra_cert_source_path}}/privkey.pem"
+    dest: "{{infra_cert_dest_path_main}}/privkey.pem"
+    mode: "0600"
+    force: "no"
+
+dehydrated_wellknown: /usr/share/nginx/html
+dehydrated_deploycert: |
+  systemctl reload nginx
+
+nginx_http_listen:
+  listen_default_ipv4_http:
+    ip: 0.0.0.0
+    port: 80
+  listen_localhost_ipv6_http:
+    ip: "[::]"
+    port: 80
+
+nginx_https_listen:
+  listen_default_ipv4_https:
+    ip: 0.0.0.0
+    port: 443
+    ssl: true
+  listen_localhost_ipv6_https:
+    ip: "[::]"
+    port: 443
+    ssl: true
+
+nginx_http_listen_default:
+  listen_default_ipv4_http:
+    ip: 0.0.0.0
+    port: 80
+    opts:
+      - default_server
+  listen_localhost_ipv6_http:
+    ip: "[::]"
+    port: 80
+    opts:
+      - default_server
+
+nginx_https_listen_default:
+  listen_default_ipv4_https:
+    ip: 0.0.0.0
+    port: 443
+    ssl: true
+    opts:
+      - default_server
+  listen_localhost_ipv6_https:
+    ip: "[::]"
+    port: 443
+    ssl: true
+    opts:
+      - default_server
+
+nginx_location_redirect2https:
+  location: /
+  custom_options:
+    - return 301 https://$host$request_uri;
+
+nginx_location_wellknown:
+  location: /.well-known/acme-challenge
+  autoindex: false
+  custom_options:
+    - alias /usr/share/nginx/html/;
+    - allow all;
+    - auth_basic off;
+
+nginx_https_options:
+  key: "{{infra_cert_dest_path_main}}/privkey.pem"
+  cert: "{{infra_cert_dest_path_main}}/fullchain.pem"
+  trusted_cert: "{{infra_cert_dest_path_main}}/chain.pem"
+  dhparam: /etc/dhparam.pem
+  protocols: TLSv1.2 TLSv1.3
+  ciphers: HIGH:!aNULL:!eNULL:!MD5:!PSK:!SRP
+  prefer_server_ciphers: true
+  session_cache: shared:SSL:10m
+  session_timeout: 55m
+  disable_session_tickets: true
+  stapling: true
+  stapling_verify: true
+  ecdh_curve: secp384r1
+
+nginx_config_main_template_enable: true
+nginx_config_main_template: >
+  {{
+    nginx_config_main_template_default |
+    combine(
+      infra_web_suffixes |
+      combine_by_suffixes(
+        prefix = 'nginx_config_main_templates',
+        hostvars = hostvars[inventory_hostname],
+        combine_options = {
+          'recursive': True,
+          'list_merge': 'append',
+        },
+      ),
+      recursive = True,
+      list_merge = 'append',
+    )
+  }}
+nginx_config_main_template_default:
+  user: nginx
+  http_enable: true
+  worker_processes: 8
+  stream_enable: false
+  worker_connections: 32768
+  worker_rlimit_nofile: 262144
+  error_log:
+    location: /var/log/nginx/error.log
+    level: warn
+  custom_options:
+    - worker_shutdown_timeout 10;
+  http_custom_options:
+    - proxy_buffers 8 16k;
+    - proxy_buffer_size 32k;
+    - keepalive_requests 10;
+    - proxy_read_timeout 90;
+    - proxy_send_timeout 90;
+    - proxy_connect_timeout 30;
+    - types_hash_max_size 2048;
+    - client_max_body_size 111m;
+    - open_file_cache max=200000 inactive=20s;
+    - open_file_cache_valid 300;
+    - open_file_cache_min_uses 2;
+    - open_file_cache_errors on;
+    - reset_timedout_connection on;
+    - client_body_timeout 30;
+    - send_timeout 30;
+    - "map $http_x_forwarded_proto $xscheme {"
+    - "  default $http_x_forwarded_proto;"
+    - '  "" $scheme;'
+    - "}"
+  http_settings:
+    tcp_nopush: true
+    tcp_nodelay: true
+    default_type: application/octet-stream
+    keepalive_timeout: 30
+    server_tokens: "off"
+    cache: false
+    rate_limit: false
+    keyval: false
+    http_custom_includes:
+      - "/etc/nginx/conf.d/*.conf"
+    access_log_format:
+      - name: main
+        format: |-
+          '$remote_addr - $remote_user [$time_local] "$request" '
+          '$status $body_bytes_sent "$http_referer" '
+          '"$http_user_agent" "$http_x_forwarded_for"'
+    access_log_location:
+      - name: main
+        location: /var/log/nginx/access.log
+
+nginx_https_headers:
+  add_headers:
+    X-Frame-Options:
+      name: X-Frame-Options
+      value: DENY
+      always: true
+    X-Content-Type-Options:
+      name: X-Content-Type-Options
+      value: nosniff
+      always: true
+    X-XSS-Protection:
+      name: X-XSS-Protection
+      value: 1; mode=block
+      always: true
+
+nginx_location_defaults_proxy:
+  proxy_hide_headers:
+    - X-Powered-By
+  proxy_set_header:
+    Host:
+      name: Host
+      value: $host
+    X-Real-IP:
+      name: X-Real-IP
+      value: $remote_addr
+    X-Forwarded-For:
+      name: X-Forwarded-For
+      value: $proxy_add_x_forwarded_for
+    X-Forwarded-Proto:
+      name: X-Forwarded-Proto
+      value: $xscheme
+
+nginx_location_defaults_all:
+  add_headers:
+    Strict-Transport-Security:
+      name: Strict-Transport-Security
+      value: max-age=63072000; includeSubdomains
+      always: true
+
+nginx_location_proxy_all: >
+  {{ nginx_https_headers |
+  combine(
+    nginx_location_defaults_all,
+    recursive = True,
+    list_merge = 'append',
+  ) |
+  combine(
+    nginx_location_defaults_proxy,
+    recursive = True,
+    list_merge = 'append',
+  ) }}
+
+nginx_location_static_all: >
+  {{ nginx_https_headers |
+  combine(
+    nginx_location_defaults_all,
+    recursive = True,
+    list_merge = 'append',
+  ) }}
+
+#cat /etc/httpd/conf.d/remoteip.conf
+#<IfModule mod_remoteip.c>
+#  RemoteIPHeader X-Real-IP
+#</IfModule>
+nginx_server_custom_options_default:
+  - "# https://support.cloudflare.com/hc/en-us/articles/200170786"
+  - real_ip_header CF-Connecting-IP;
+  - set_real_ip_from 103.21.244.0/22;
+  - set_real_ip_from 103.22.200.0/22;
+  - set_real_ip_from 103.31.4.0/22;
+  - set_real_ip_from 108.162.192.0/18;
+  - set_real_ip_from 104.16.0.0/12;
+  - set_real_ip_from 131.0.72.0/22;
+  - set_real_ip_from 141.101.64.0/18;
+  - set_real_ip_from 162.158.0.0/15;
+  - set_real_ip_from 172.64.0.0/13;
+  - set_real_ip_from 173.245.48.0/20;
+  - set_real_ip_from 188.114.96.0/20;
+  - set_real_ip_from 190.93.240.0/20;
+  - set_real_ip_from 197.234.240.0/22;
+  - set_real_ip_from 198.41.128.0/17;
+  - set_real_ip_from 2400:cb00::/32;
+  - set_real_ip_from 2606:4700::/32;
+  - set_real_ip_from 2803:f800::/32;
+  - set_real_ip_from 2405:b500::/32;
+  - set_real_ip_from 2405:8100::/32;
+  - set_real_ip_from 2c0f:f248::/32;
+  - set_real_ip_from 2a06:98c0::/29;
+
+nginx_custom_options: >
+  {{
+    infra_web_suffixes |
+    union_by_suffixes(
+      prefix = 'nginx_server_custom_options',
+      hostvars = hostvars[inventory_hostname],
+    )
+  }}
+
+nginx_config_http_template_default:
+  default:
+    servers:
+      default_http:
+        server_name: _
+        custom_options: "{{ nginx_custom_options }}"
+        listen: "{{ nginx_http_listen_default }}"
+        web_server:
+          locations:
+            well-known: "{{ nginx_location_wellknown }}"
+      default_https:
+        server_name: _
+        custom_options: "{{ nginx_custom_options }}"
+        listen: "{{ nginx_https_listen_default }}"
+        ssl: "{{ nginx_https_options }}"
+
+nginx_config_http_template_enable: true
+nginx_config_http_template: >
+  {{
+    nginx_config_http_template_default |
+    combine(
+      infra_web_suffixes |
+      combine_by_suffixes(
+        prefix = 'nginx_config_http_templates',
+        hostvars = hostvars[inventory_hostname],
+        combine_options = {
+          'recursive': True,
+          'list_merge': 'append',
+        },
+      ),
+      recursive = True,
+      list_merge = 'append',
+    )
+  }}

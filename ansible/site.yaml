@@ -59,3 +59,17 @@
   roles:
     - infra/grafana
   tags: [grafana-infra]
+
+- name: install nginx
+  hosts: nginx
+  remote_user: root
+  roles:
+    - external/nginx-install
+  tags: [nginx-install]
+
+- name: configure nginx
+  hosts: nginx
+  remote_user: root
+  roles:
+    - external/nginx-config
+  tags: [nginx-config]
