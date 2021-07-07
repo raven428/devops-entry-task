@@ -2,10 +2,12 @@
 infra_fdt_groups2create_p2p_entry:
   - name: raven
     gid: 1111
+  - name: gaiad
 infra_fdt_users2create_p2p_entry:
   - name: raven
     uid: 1111
     groups: wheel
+  - name: gaiad
 
 grafana_url: "https://{{ ansible_fqdn }}/grafana/"
 prometheus_web_external_url: "https://{{ ansible_fqdn }}/prometheus/"
@@ -20,6 +22,32 @@ infra_fdt_content2upload_p2p_entry:
     content: |
       # login: 'c39to62mMPbCLz', password: 'fTyEv1rc5Ym7kFt'
       c39to62mMPbCLz:$apr1$GyI8RwlY$BgYYeJK3ZeZZw1rCIov1g/
+  - dest: "/etc/systemd/system/gaiad.service"
+    mode: "0644"
+    force: "yes"
+    notify: "systemd daemon-reload"
+    content: |
+      [Unit]
+      Description=gaiad
+      After=network-online.target
+      [Service]
+      ExecStart=/usr/local/bin/gaiad start --p2p.seeds bf8328b66dceb4987e5cd94430af66045e59899f@public-seed.cosmos.vitwit.com:26656,cfd785a4224c7940e9a10f6c1ab24c343e923bec@164.68.107.188:26656,d72b3011ed46d783e369fdf8ae2055b99a1e5074@173.249.50.25:26656,ba3bacc714817218562f743178228f23678b2873@public-seed-node.cosmoshub.certus.one:26656,3c7cad4154967a294b3ba1cc752e40e8779640ad@84.201.128.115:26656,366ac852255c3ac8de17e11ae9ec814b8c68bddb@51.15.94.196:26656 --x-crisis-skip-assert-invariants
+      WorkingDirectory=~
+      Type=simple
+      User=gaiad
+      Group=gaiad
+      SyslogIdentifier=gaiad
+      RestartSec=1
+      Restart=always
+      StartLimitInterval=0
+      ProtectHome=no
+      NoNewPrivileges=yes
+      ProtectSystem=full
+      ProtectControlGroups=true
+      ProtectKernelModules=true
+      ProtectKernelTunables=yes
+      [Install]
+      WantedBy=multi-user.target
 
 nginx_location_basic_auth:
   auth_basic: restricted area
@@ -79,3 +107,62 @@ nginx_config_http_templates_p2p_entry:
                 recursive = True,
                 list_merge = 'append',
               ) }}
+
+infra_fdt_gaiad_version: "4.2.1"
+infra_fdt_gaiad_arch_map:
+  x86_64: "amd64"
+  aarch64: "arm64"
+infra_fdt_gaiad_arch: "{{
+  infra_fdt_gaiad_arch_map[ansible_architecture] |
+  default(ansible_architecture)
+}}"
+
+infra_fdt_dirs2create_p2p_entry:
+  - mode: "0700"
+    owner: "gaiad"
+    group: "gaiad"
+    path: "/home/gaiad/.gaia/config"
+
+infra_fdt_file2down_p2p_entry:
+  - url: >-
+      https://github.com/cosmos/gaia/releases/download/v{{
+        infra_fdt_gaiad_version
+      }}/gaiad-v{{
+        infra_fdt_gaiad_version
+      }}-linux-{{
+        infra_fdt_gaiad_arch
+      }}
+    dest: "/usr/local/bin/gaiad"
+    archive: false
+  - url: >-
+      https://github.com/cosmos/mainnet/raw/master/genesis.cosmoshub-4.json.gz
+    temp_name: "genesis.cosmoshub-4.json.gz"
+    creates: "genesis.cosmoshub-4.json"
+    files:
+      - name: "genesis.cosmoshub-4.json"
+        dest: "/home/gaiad/.gaia/config/genesis.json"
+        owner: "gaiad"
+        group: "gaiad"
+    archive: true
+
+infra_fdt_templates2upload_p2p_entry:
+  - src: "templates/gaiad/config/app.toml.j2"
+    dest: "/home/gaiad/.gaia/config/app.toml"
+    owner: "gaiad"
+    group: "gaiad"
+    mode: "0640"
+    force: "yes"
+    follow: "no"
+  - src: "templates/gaiad/config/config.toml.j2"
+    dest: "/home/gaiad/.gaia/config/config.toml"
+    owner: "gaiad"
+    group: "gaiad"
+    mode: "0640"
+    force: "yes"
+    follow: "no"
+
+infra_fdt_systemd4units_p2p_entry:
+  - name: "gaiad.service"
+    state: "started"
+    masked: "no"
+    enabled: "yes"
