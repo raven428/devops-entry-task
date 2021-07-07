@@ -1,0 +1,539 @@
+#
+# managed by Ansible
+#
+---
+groups:
+  - name: prom-job-miss
+    rules:
+      - alert: job absent
+        expr: absent(up{job="prom-exporter"})
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: prom exporter absent"
+          description: "Prometheus exporter has disappeared."
+
+  - name: prom-node-tgt-down
+    rules:
+      - alert: target down node
+        expr: up{job="node-exporter"} == 0
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p2
+          prio_stage: p3
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "Target [{{$labels.instance}}] absent"
+          description: "Target [{{$labels.instance}}] ({{$labels.nick}}) of job [{{$labels.job}}] has disappeared for more than 5 minutes."
+
+  - name: prom-other-tgt-down
+    rules:
+      - alert: target down other
+        expr: up{job!="node-exporter"} == 0
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p3
+          prio_prod: p4
+          prio_stage: p5
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "Target [{{$labels.instance}}] absent"
+          description: "Target [{{$labels.instance}}] ({{$labels.nick}}) of job [{{$labels.job}}] has disappeared for more than 5 minutes."
+
+  - name: prom-all-miss
+    rules:
+      - alert: all targets missing
+        expr: count by (job) (up) == 0
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.job}}"
+        annotations:
+          summary: "Job [{{$labels.job}}] absent all targets"
+          description: "Prometheus job does not have living target anymore."
+
+  - name: prom-conf-reload-fail
+    rules:
+      - alert: configuration reload failure
+        expr: >-
+           (prometheus_config_last_reload_successful != 1)
+           * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: prom configuration reload failure"
+          description: "Prometheus configuration reload error."
+
+  - name: prom-conf-too-restarts
+    rules:
+      - alert: tools have too many restarts
+        expr: >-
+          max(
+            changes(process_start_time_seconds[15m]) > 2
+          ) without(env,team,job,cluster)
+          * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: prom too many restarts"
+          description: "Prometheus has restarted more than twice in the last 15 minutes. It might be crashlooping."
+
+  - name: prom-alert-man-conf-reload-fail
+    rules:
+      - alert: alertmanager configuration reload failure
+        expr: |
+          (alertmanager_config_last_reload_successful != 1)
+          * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: a-m configuration reload failure"
+          description: "Alertmanager configuration reload error."
+
+  - name: prom-alert-man-conf-not-sync
+    rules:
+      - alert: alertmanager config not synced
+        expr: >-
+          (
+           count(
+             count_values(
+               "config_hash",
+               alertmanager_config_hash
+              ) by(instance)
+            ) by(instance) > 1
+          ) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: a-m config not synced"
+          description: "Configurations of Alertmanager cluster instances are out of sync."
+
+  - name: prom-not-conn-to-AM
+    rules:
+      - alert: prom not a-m
+        expr: >-
+          (
+            prometheus_notifications_alertmanagers_discovered < 1
+          ) * on(instance) group_left(env,team,job,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: prom not connected to a-m"
+          description: "Prometheus cannot connect the Alertmanager."
+
+  - name: prom-rule-eval-fail
+    rules:
+      - alert: rule evaluation failures
+        expr: >-
+          label_replace(
+            (
+              max(
+                increase(prometheus_rule_evaluation_failures_total[10m]) > 1.5
+              ) by(instance, rule_group)
+            ),
+            "rulename", "$1", "rule_group", ".+/(.+)"
+          ) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+          alertsub2: "{{$labels.rulename}}"
+        annotations:
+          summary: "[{{$labels.nick}}]: rule [{{$labels.rulename}}] eval fail"
+          description: "Prometheus encountered [{{$value}}] rule evaluation failures, leading to potentially ignored alerts."
+
+  - name: prom-tpl-txt-exp-fail
+    rules:
+      - alert: template text expansion failures
+        expr: >-
+          (
+            max(
+              increase(prometheus_template_text_expansion_failures_total[10m]) > 0
+            ) by(instance)
+          ) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: template text expansion failures"
+          description: "Prometheus encountered [{{$value}}] template text expansion failures."
+
+  - name: prom-rule-eval-slow
+    rules:
+      - alert: rule evaluation slow
+        expr: >-
+          label_replace(
+            (
+             prometheus_rule_group_last_duration_seconds >
+             prometheus_rule_group_interval_seconds
+            ),
+            "rulename", "$1", "rule_group", ".+/(.+)"
+          ) * on(instance) group_left(env, team, nick) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+          alertsub1: "{{$labels.rulename}}"
+        annotations:
+          summary: "[{{$labels.nick}}]: rule [{{$labels.rulename}}] slow"
+          description: "Prometheus rule evaluation took more time than the scheduled interval. It indicates a slower storage backend access or too complex query."
+
+  - name: prom-notif-backlog
+    rules:
+      - alert: notifications backlog
+        expr: >-
+          avg(
+            min_over_time(prometheus_notifications_queue_length[10m]) > 0
+          ) by(instance)
+          * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: notifications backlog"
+          description: "The Prometheus notification queue has not been empty for 30 minutes."
+
+  - name: prom-alert-man-notif-fail
+    rules:
+      - alert: alertmanager notification failing
+        expr: >-
+          avg(
+           rate(alertmanager_notifications_failed_total[10m]) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+          alertsub1: "{{$labels.integration}}"
+        annotations:
+          summary: "[{{$labels.nick}}]: a-m notify [{{$labels.integration}}] failing"
+          description: "Alertmanager is failing sending notifications."
+
+  - name: prom-tgt-empty
+    rules:
+      - alert: target empty
+        expr: >-
+          (prometheus_sd_discovered_targets == 0)
+          * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+          alertsub1: "{{$labels.config}}"
+        annotations:
+          summary: "{{$labels.nodename}}: target [{{$labels.config}}] empty"
+          description: "Prometheus has no target in service discovery."
+
+  - name: prom-tgt-scr-slow
+    rules:
+      - alert: target scraping slow
+        expr: >-
+          max(
+            prometheus_target_interval_length_seconds{
+              quantile="0.9",interval="10m0s"
+            } > 600*1.3
+            or
+            prometheus_target_interval_length_seconds{
+              quantile="0.9",interval="5m0s"
+            } > 300*1.3
+            or
+            prometheus_target_interval_length_seconds{
+              quantile="0.9",interval="30s"
+            } > 30*1.3
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: target scraping slow"
+          description: "Prometheus is scraping exporters slowly."
+
+  - name: prom-lrg-scr
+    rules:
+      - alert: large scrape
+        expr: >-
+          max(
+            increase(
+              prometheus_target_scrapes_exceeded_sample_limit_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: large scrape"
+          description: "Prometheus has many scrapes that exceed the sample limit."
+
+  - name: prom-tgt-scr-dup
+    rules:
+      - alert: target scrape duplicate
+        expr: >-
+          max(
+            increase(
+              prometheus_target_scrapes_sample_duplicate_timestamp_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p2
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: target scrape duplicate"
+          description: "Prometheus has many samples rejected due to duplicate timestamps but different values."
+
+  - name: prom-TSDB-chk-pnt-cre-fail
+    rules:
+      - alert: TSDB checkpoint creation failures
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_checkpoint_creations_failed_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB checkpoint creation failures"
+          description: "Prometheus encountered [{{$value}}] checkpoint creation failures."
+
+  - name: prom-TSDB-chk-pnt-del-fail
+    rules:
+      - alert: TSDB checkpoint deletion failures
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_checkpoint_deletions_failed_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,team,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB checkpoint deletion failures"
+          description: "Prometheus encountered [{{$value}}] checkpoint deletion failures."
+
+  - name: prom-TSDB-compact-fail
+    rules:
+      - alert: TSDB compactions failed
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_compactions_failed_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB compactions failed"
+          description: "Prometheus encountered [{{$value}}] TSDB compactions failures."
+
+  - name: prom-TSDB-head-trunc-fail
+    rules:
+      - alert: TSDB head truncations failed
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_head_truncations_failed_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB head truncations failed"
+          description: "Prometheus encountered [{{$value}}] TSDB head truncation failures."
+
+  - name: prom-TSDB-head-relo-fail
+    rules:
+      - alert: TSDB reload failures
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_reloads_failures_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB reload failures"
+          description: "Prometheus encountered [{{$value}}] TSDB reload failures."
+
+  - name: prom-TSDB-head-WAL-corru
+    rules:
+      - alert: TSDB WAL corruptions
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_wal_corruptions_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB WAL corruptions"
+          description: "Prometheus encountered [{{$value}}] TSDB WAL corruptions."
+
+  - name: prom-TSDB-head-WAL-trunc-fail
+    rules:
+      - alert: TSDB WAL truncations failed
+        expr: >-
+          max(
+            increase(
+              prometheus_tsdb_wal_truncations_failed_total[10m]
+            ) > 0
+          ) by(instance) * on(instance) group_left(env,job,team,nick,cluster) up
+        for: 5m
+        labels:
+          type: prom
+          prio_urgent: p1
+          prio_prod: p3
+          prio_stage: p4
+          env: "{{$labels.env}}"
+          team: "{{$labels.team}}"
+          alertsub0: "{{$labels.nick}} [{{$labels.instance}}]"
+        annotations:
+          summary: "[{{$labels.nick}}]: TSDB WAL truncations failed"
+          description: "Prometheus encountered [{{$value}}] TSDB WAL truncation failures."

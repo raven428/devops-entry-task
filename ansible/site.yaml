@@ -31,3 +31,10 @@
   roles:
     - infra/file-dir-tpl
   tags: [file-dir-tpl]
+
+- name: install prometheus hosts
+  hosts: prometheus
+  remote_user: root
+  roles:
+    - external/prometheus
+  tags: [prometheus-role]

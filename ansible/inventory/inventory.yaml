@@ -17,3 +17,15 @@ p2p_entry:
   hosts:
     p2p-test:
       ansible_host: p2p-test.local
+ptrgt_prom_exporter:
+  vars:
+    prom_exporter:
+      plabel_cluster: prom
+      scrape_port: 9090
+      scrape_config:
+        metrics_path: /prometheus/metrics
+  children:
+    prometheus:
+prometheus:
+  children:
+    p2p_entry:
