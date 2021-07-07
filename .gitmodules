@@ -1,0 +1,4 @@
+[submodule "ansible/roles/external/prometheus"]
+	path = ansible/roles/external/prometheus
+	url = git@github.com:cloudalchemy/ansible-prometheus.git
+	branch = tags/2.15.5
