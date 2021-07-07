@@ -37,9 +37,21 @@ ptrgt_node_exporter:
           password: fTyEv1rc5Ym7kFt
   children:
     p2p_entry:
+ptrgt_grafana_exporter:
+  vars:
+    grafana_exporter:
+      plabel_cluster: grafana
+      scrape_port: 3000
+  children:
+    grafana:
 prometheus:
   children:
     p2p_entry:
 metric_exporters:
+  children:
+    p2p_entry:
+grafana:
+  vars:
+    plabel_env: prod
   children:
     p2p_entry:

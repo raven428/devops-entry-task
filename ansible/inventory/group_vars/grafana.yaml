@@ -1,0 +1,34 @@
+---
+grafana_env: "prod"
+grafana_security:
+  admin_user: "admin"
+  admin_password: "admin"
+grafana_datasources:
+  - name: "prom-infra"
+    url: "https://{{ ansible_fqdn }}/prometheus"
+    type: "prometheus"
+    access: "direct"
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 30s
+grafana_users:
+  default_theme: light
+grafana_analytics:
+  reporting_enabled: false
+grafana_version: 7.3.2
+grafana_metrics:
+  interval_seconds: 30s
+grafana_auth:
+  anonymous:
+    org_role: "Admin" # NB: first letter case matter
+  basic:
+    enabled: false
+grafana_alerting: {}
+grafana_additional_sections:
+  dashboards:
+    versions_to_keep: 77
+    min_refresh_interval: 30s
+    default_home_dashboard_path: "/etc/grafana/dashboards/infra-home-{{grafana_env}}.json"
+  date_formats:
+    default_timezone: browser

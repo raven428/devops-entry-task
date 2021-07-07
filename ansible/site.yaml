@@ -45,3 +45,10 @@
   roles:
     - external/node-exporter
   tags: [exporters-roles]
+
+- name: install grafana hosts
+  hosts: grafana
+  remote_user: root
+  roles:
+    - external/grafana
+  tags: [grafana-role]
