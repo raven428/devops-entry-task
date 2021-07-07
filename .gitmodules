@@ -6,3 +6,7 @@
 	path = ansible/roles/external/node-exporter
 	url = git@github.com:cloudalchemy/ansible-node-exporter.git
 	branch = tags/0.22.0
+[submodule "ansible/roles/external/grafana"]
+	path = ansible/roles/external/grafana
+	url = git@github.com:raven428/ansible-grafana.git
+	branch = additional-sections
