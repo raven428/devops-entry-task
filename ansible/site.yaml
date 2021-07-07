@@ -38,3 +38,10 @@
   roles:
     - external/prometheus
   tags: [prometheus-role]
+
+- name: install metric-exporters to hosts
+  hosts: metric_exporters
+  remote_user: root
+  roles:
+    - external/node-exporter
+  tags: [exporters-roles]

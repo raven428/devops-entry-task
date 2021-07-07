@@ -1,0 +1,25 @@
+---
+node_exporter_version: "1.0.1"
+node_exporter_web_listen_address: >-
+  {{
+    node_exporter_listen |
+    default(node_exporter.scrape_addr) |
+    default(scrape_addr) |
+    default('0.0.0.0')
+  }}:{{
+    node_exporter_port |
+    default(node_exporter_scrape_port) |
+    default(node_exporter.scrape_port) |
+    default(scrape_port) |
+    default('9100')
+  }}
+node_exporter_enabled_collectors:
+  - tcpstat
+  - systemd
+  - textfile:
+      directory: "{{node_exporter_textfile_dir}}"
+  - processes
+  - interrupts
+node_exporter_textfile_dir: /var/lib/node_exporter
+node_exporter_basic_auth_users:
+  c39to62mMPbCLz: fTyEv1rc5Ym7kFt

@@ -26,6 +26,20 @@ ptrgt_prom_exporter:
         metrics_path: /prometheus/metrics
   children:
     prometheus:
+ptrgt_node_exporter:
+  vars:
+    node_exporter:
+      plabel_cluster: node-any
+      scrape_port: 9100
+      scrape_config:
+        basic_auth:
+          username: c39to62mMPbCLz
+          password: fTyEv1rc5Ym7kFt
+  children:
+    p2p_entry:
 prometheus:
+  children:
+    p2p_entry:
+metric_exporters:
   children:
     p2p_entry:
