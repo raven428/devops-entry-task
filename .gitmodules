@@ -2,3 +2,7 @@
 	path = ansible/roles/external/prometheus
 	url = git@github.com:cloudalchemy/ansible-prometheus.git
 	branch = tags/2.15.5
+[submodule "ansible/roles/external/node-exporter"]
+	path = ansible/roles/external/node-exporter
+	url = git@github.com:cloudalchemy/ansible-node-exporter.git
+	branch = tags/0.22.0
