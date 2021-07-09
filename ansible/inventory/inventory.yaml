@@ -17,6 +17,9 @@ p2p_entry:
   hosts:
     p2p-test:
       ansible_host: p2p-test.local
+    p2p-entry:
+      ansible_host: 194.169.160.182
+      #infra_base_selinux_state: disabled
 ptrgt_prom_exporter:
   vars:
     prom_exporter:
