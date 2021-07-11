@@ -3,11 +3,16 @@ infra_fdt_groups2create_p2p_entry:
   - name: raven
     gid: 1111
   - name: gaiad
+  - name: zaharden
+    create_home: yes
 infra_fdt_users2create_p2p_entry:
   - name: raven
     uid: 1111
     groups: wheel
   - name: gaiad
+  - name: zaharden
+    create_home: yes
+    groups: wheel
 
 grafana_url: "https://{{ ansible_fqdn }}/grafana/"
 prometheus_web_external_url: "https://{{ ansible_fqdn }}/prometheus/"
@@ -166,6 +171,12 @@ infra_fdt_templates2upload_p2p_entry:
           infra_fdt_gaiad_moniker |
           default('dflkjkhasdflkjshadfkjhweoihasdf')
         }}
+
+infra_fdt_files2upload_host:
+  - src: "files/scripts/infra-collectors/collector.d/gaiad.sh"
+    dest: "/usr/local/infra-collectors/poller.d/gaiad.sh"
+    mode: "0755"
+    force: "yes"
 
 infra_fdt_systemd4units_p2p_entry:
   - name: "gaiad.service"

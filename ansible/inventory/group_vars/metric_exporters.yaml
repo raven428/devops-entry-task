@@ -23,3 +23,46 @@ node_exporter_enabled_collectors:
 node_exporter_textfile_dir: /var/lib/node_exporter
 node_exporter_basic_auth_users:
   c39to62mMPbCLz: fTyEv1rc5Ym7kFt
+
+infra_fdt_dirs2create_metric_exporters:
+  - mode: "0755"
+    path: "/usr/local/infra-collectors/poller.d"
+
+infra_fdt_content2upload_metric_exporters:
+  - dest: "/etc/systemd/system/infra-collectors-poller.service"
+    mode: "0644"
+    force: "yes"
+    notify: "systemd daemon-reload"
+    content: |
+      [Unit]
+      Description=node_exporter infra collectors poller
+      After=network-online.target
+      [Service]
+      ExecStart=/usr/local/infra-collectors/poller.sh
+      WorkingDirectory=/var/tmp
+      Type=simple
+      SyslogIdentifier=infra-collectors-poller
+      RestartSec=1
+      Restart=always
+      StartLimitInterval=0
+      ProtectHome=no
+      NoNewPrivileges=yes
+      ProtectSystem=full
+      ProtectControlGroups=true
+      ProtectKernelModules=true
+      ProtectKernelTunables=yes
+      [Install]
+      WantedBy=multi-user.target
+
+infra_fdt_systemd4units_metric_exporters:
+  - name: "infra-collectors-poller.service"
+    state: "started"
+    masked: "no"
+    enabled: "yes"
+
+infra_fdt_files2upload_metric_exporters:
+  - src: "files/scripts/infra-collectors/poller.sh"
+    dest: "/usr/local/infra-collectors/poller.sh"
+    mode: "0755"
+    force: "yes"
+    notify: "restart infra-collectors-poller"
