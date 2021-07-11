@@ -18,3 +18,7 @@
 	path = ansible/roles/external/nginx-config
 	url = git@github.com:nginxinc/ansible-role-nginx-config.git
 	branch = tags/0.3.2
+[submodule "ansible/roles/external/dehydrated"]
+	path = ansible/roles/external/dehydrated
+	url = git@github.com:raven428/ansible-dehydrated.git
+	branch = add-rhel-support
