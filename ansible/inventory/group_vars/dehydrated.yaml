@@ -1,0 +1,7 @@
+---
+dehydrated_cronjob: no
+dehydrated_version: v0.7.0
+dehydrated_systemd_timer: yes
+dehydrated_accept_letsencrypt_terms: yes
+dehydrated_install_root: /usr/local/dehydrated
+dehydrated_contactemail: user@aol.com

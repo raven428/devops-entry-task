@@ -73,3 +73,10 @@
   roles:
     - external/nginx-config
   tags: [nginx-config]
+
+- name: configure dehydrated
+  hosts: dehydrated
+  remote_user: root
+  roles:
+    - external/dehydrated
+  tags: [dehydrated]

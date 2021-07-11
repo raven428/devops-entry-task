@@ -68,3 +68,6 @@ grafana:
 nginx:
   children:
     p2p_entry:
+dehydrated:
+  children:
+    p2p_entry:
