@@ -160,6 +160,12 @@ infra_fdt_templates2upload_p2p_entry:
     mode: "0640"
     force: "yes"
     follow: "no"
+    vars:
+      moniker: >-
+        {{
+          infra_fdt_gaiad_moniker |
+          default('dflkjkhasdflkjshadfkjhweoihasdf')
+        }}
 
 infra_fdt_systemd4units_p2p_entry:
   - name: "gaiad.service"
