@@ -54,6 +54,13 @@ ptrgt_gaiad_exporter:
       scrape_port: 26660
   children:
     grafana:
+ptrgt_gaiar_exporter:
+  vars:
+    gaiar_exporter:
+      plabel_cluster: gaiar
+      scrape_port: 9339
+  children:
+    grafana:
 prometheus:
   children:
     p2p_entry:

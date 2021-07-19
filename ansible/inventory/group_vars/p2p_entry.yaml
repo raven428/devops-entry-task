@@ -53,6 +53,32 @@ infra_fdt_content2upload_p2p_entry:
       ProtectKernelTunables=yes
       [Install]
       WantedBy=multi-user.target
+  - dest: "/etc/systemd/system/gaiad-exporter.service"
+    mode: "0644"
+    force: "yes"
+    notify: "systemd daemon-reload"
+    content: |
+      [Unit]
+      Description=gaiad-exporter
+      After=network-online.target
+      [Service]
+      ExecStart=/usr/local/bin/gaiad-exporter
+      WorkingDirectory=~
+      Type=simple
+      User=gaiad
+      Group=gaiad
+      SyslogIdentifier=gaiad
+      RestartSec=1
+      Restart=always
+      StartLimitInterval=0
+      ProtectHome=no
+      NoNewPrivileges=yes
+      ProtectSystem=full
+      ProtectControlGroups=true
+      ProtectKernelModules=true
+      ProtectKernelTunables=yes
+      [Install]
+      WantedBy=multi-user.target
 
 nginx_location_basic_auth:
   auth_basic: restricted area
@@ -114,6 +140,7 @@ nginx_config_http_templates_p2p_entry:
               ) }}
 
 infra_fdt_gaiad_version: "4.2.1"
+infra_fdt_gaiad_exporter_version: "0.0.1"
 infra_fdt_gaiad_arch_map:
   x86_64: "amd64"
   aarch64: "arm64"
@@ -139,6 +166,30 @@ infra_fdt_file2down_p2p_entry:
       }}
     dest: "/usr/local/bin/gaiad"
     archive: false
+  - url: >-
+      https://github.com/raven428/gaiad-exporter/releases/download/v{{
+        infra_fdt_gaiad_exporter_version
+      }}/gaiad-exporter-{{
+        infra_fdt_gaiad_exporter_version
+      }}.linux-{{
+        infra_fdt_gaiad_arch
+      }}.tar.gz
+    creates: >-
+      gaiad-exporter-{{
+        infra_fdt_gaiad_exporter_version
+      }}.linux-{{
+        infra_fdt_gaiad_arch
+      }}
+    files:
+      - name: >-
+          gaiad-exporter-{{
+            infra_fdt_gaiad_exporter_version
+          }}.linux-{{
+            infra_fdt_gaiad_arch
+          }}/gaiad-exporter
+        dest: /usr/local/bin/gaiad-exporter
+        mode: "0755"
+    archive: true
   - url: >-
       https://github.com/cosmos/mainnet/raw/master/genesis.cosmoshub-4.json.gz
     temp_name: "genesis.cosmoshub-4.json.gz"
@@ -180,6 +231,10 @@ infra_fdt_files2upload_host:
 
 infra_fdt_systemd4units_p2p_entry:
   - name: "gaiad.service"
+    state: "started"
+    masked: "no"
+    enabled: "yes"
+  - name: "gaiad-exporter.service"
     state: "started"
     masked: "no"
     enabled: "yes"
