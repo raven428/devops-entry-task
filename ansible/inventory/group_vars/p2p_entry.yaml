@@ -35,9 +35,10 @@ infra_fdt_content2upload_p2p_entry:
       [Unit]
       Description=gaiad
       After=network-online.target
+
       [Service]
-      ExecStart=/usr/local/bin/gaiad start --p2p.seeds bf8328b66dceb4987e5cd94430af66045e59899f@public-seed.cosmos.vitwit.com:26656,cfd785a4224c7940e9a10f6c1ab24c343e923bec@164.68.107.188:26656,d72b3011ed46d783e369fdf8ae2055b99a1e5074@173.249.50.25:26656,ba3bacc714817218562f743178228f23678b2873@public-seed-node.cosmoshub.certus.one:26656,3c7cad4154967a294b3ba1cc752e40e8779640ad@84.201.128.115:26656,366ac852255c3ac8de17e11ae9ec814b8c68bddb@51.15.94.196:26656 --x-crisis-skip-assert-invariants
-      WorkingDirectory=~
+      ExecStart=/usr/local/bin/gaiad start --p2p.seeds bf8328b66dceb4987e5cd94430af66045e59899f@public-seed.cosmos.vitwit.com:26656,cfd785a4224c7940e9a10f6c1ab24c343e923bec@164.68.107.188:26656,d72b3011ed46d783e369fdf8ae2055b99a1e5074@173.249.50.25:26656,ba3bacc714817218562f743178228f23678b2873@public-seed-node.cosmoshub.certus.one:26656,3c7cad4154967a294b3ba1cc752e40e8779640ad@84.201.128.115:26656,366ac852255c3ac8de17e11ae9ec814b8c68bddb@51.15.94.196:26656 --x-crisis-skip-assert-invariants --home {{infra_fdt_gaiad_home}}
+      WorkingDirectory={{infra_fdt_gaiad_home}}
       Type=simple
       User=gaiad
       Group=gaiad
@@ -45,12 +46,30 @@ infra_fdt_content2upload_p2p_entry:
       RestartSec=1
       Restart=always
       StartLimitInterval=0
-      ProtectHome=no
+      ProtectHome=yes
       NoNewPrivileges=yes
-      ProtectSystem=full
+      ProtectSystem=strict
+      ReadWritePaths=/usr/local/gaiad /var/lib/gaiad
       ProtectControlGroups=true
       ProtectKernelModules=true
       ProtectKernelTunables=yes
+      AmbientCapabilities=
+      CapabilityBoundingSet=
+      LockPersonality=yes
+      MemoryDenyWriteExecute=yes
+      PrivateDevices=yes
+      PrivateTmp=yes
+      RestrictAddressFamilies=AF_INET AF_INET6
+      RestrictNamespaces=yes
+      RestrictRealtime=yes
+      RestrictSUIDSGID=yes
+      SystemCallArchitectures=native
+      SystemCallErrorNumber=EPERM
+      SystemCallFilter=@default @aio @basic-io @file-system @io-event @keyring @memlock @network-io @process @signal @sync @timer flock mprotect pipe2 uname
+      PrivateUsers=yes
+      RemoveIPC=yes
+      UMask=0077
+
       [Install]
       WantedBy=multi-user.target
   - dest: "/etc/systemd/system/gaiad-exporter.service"
@@ -67,7 +86,7 @@ infra_fdt_content2upload_p2p_entry:
       Type=simple
       User=gaiad
       Group=gaiad
-      SyslogIdentifier=gaiad
+      SyslogIdentifier=gaiad-exporter
       RestartSec=1
       Restart=always
       StartLimitInterval=0
@@ -149,11 +168,12 @@ infra_fdt_gaiad_arch: "{{
   default(ansible_architecture)
 }}"
 
+infra_fdt_gaiad_home: "/usr/local/gaiad"
 infra_fdt_dirs2create_p2p_entry:
   - mode: "0700"
     owner: "gaiad"
     group: "gaiad"
-    path: "/home/gaiad/.gaia/config"
+    path: "{{infra_fdt_gaiad_home}}/config"
 
 infra_fdt_file2down_p2p_entry:
   - url: >-
@@ -196,21 +216,21 @@ infra_fdt_file2down_p2p_entry:
     creates: "genesis.cosmoshub-4.json"
     files:
       - name: "genesis.cosmoshub-4.json"
-        dest: "/home/gaiad/.gaia/config/genesis.json"
+        dest: "{{infra_fdt_gaiad_home}}/config/genesis.json"
         owner: "gaiad"
         group: "gaiad"
     archive: true
 
 infra_fdt_templates2upload_p2p_entry:
   - src: "templates/gaiad/config/app.toml.j2"
-    dest: "/home/gaiad/.gaia/config/app.toml"
+    dest: "{{infra_fdt_gaiad_home}}/config/app.toml"
     owner: "gaiad"
     group: "gaiad"
     mode: "0640"
     force: "yes"
     follow: "no"
   - src: "templates/gaiad/config/config.toml.j2"
-    dest: "/home/gaiad/.gaia/config/config.toml"
+    dest: "{{infra_fdt_gaiad_home}}/config/config.toml"
     owner: "gaiad"
     group: "gaiad"
     mode: "0640"
