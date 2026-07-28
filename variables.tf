@@ -89,9 +89,9 @@ variable "db_password" {
 }
 
 variable "db_engine_version" {
-  description = "PostgreSQL engine version"
+  description = "PostgreSQL major engine version. The latest available minor version for this major branch is resolved automatically"
   type        = string
-  default     = "16.3"
+  default     = "16"
 }
 
 variable "db_instance_class" {

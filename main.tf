@@ -188,6 +188,15 @@ resource "aws_instance" "vps" {
 # RDS PostgreSQL
 # =====================================================================
 
+# Resolves the latest available minor version for the requested major
+# branch (e.g. "16"), so a deprecated pinned minor version never breaks
+# the apply.
+data "aws_rds_engine_version" "postgres" {
+  engine  = "postgres"
+  version = var.db_engine_version
+  latest  = true
+}
+
 resource "aws_db_subnet_group" "this" {
   name       = "${local.name_prefix}-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
@@ -200,7 +209,7 @@ resource "aws_db_subnet_group" "this" {
 resource "aws_db_instance" "this" {
   identifier     = "${local.name_prefix}-postgres"
   engine         = "postgres"
-  engine_version = var.db_engine_version
+  engine_version = data.aws_rds_engine_version.postgres.version_actual
   instance_class = var.db_instance_class
 
   allocated_storage = var.db_allocated_storage
@@ -212,10 +221,11 @@ resource "aws_db_instance" "this" {
   password = var.db_password
   port     = 5432
 
-  db_subnet_group_name   = aws_db_subnet_group.this.name
-  vpc_security_group_ids = [aws_security_group.db.id]
-  multi_az               = false
-  publicly_accessible    = false
+  db_subnet_group_name       = aws_db_subnet_group.this.name
+  vpc_security_group_ids     = [aws_security_group.db.id]
+  multi_az                   = false
+  publicly_accessible        = false
+  auto_minor_version_upgrade = true
 
   skip_final_snapshot = true
   deletion_protection = false
